@@ -109,16 +109,16 @@ export interface NormalizedSpec {
     basePrice: number | null;
     country: string | null;
     manufacturer: string | null;
+    imageUrl?: string | null;
 }
 
 /**
  * Comparison result between two vehicles
  */
 export interface ComparisonResult {
-    vehicleA: NormalizedSpec;
-    vehicleB: NormalizedSpec;
+    vehicles: NormalizedSpec[];
     categories: ComparisonCategory[];
-    overallWinner: 'A' | 'B' | 'tie' | null;
+    overallWinner: string | 'tie' | null; // vehicleId or 'tie'
 }
 
 /**
@@ -127,9 +127,8 @@ export interface ComparisonResult {
 export interface ComparisonCategory {
     name: string;
     icon: string;
-    valueA: string | number | null;
-    valueB: string | number | null;
-    winner: 'A' | 'B' | 'tie' | null;
+    values: Record<string, string | number | null>; // vehicleId -> value
+    winner: string | 'tie' | null; // vehicleId or 'tie'
     unit?: string;
     higherIsBetter: boolean;
 }
@@ -142,7 +141,7 @@ export interface ComparisonHighlight {
     category: string;
     icon: string;
     message: string; // e.g., "Maverick wins in fuel economy — 42 mpg vs 33 mpg"
-    winner: 'A' | 'B';
+    winner: string; // vehicleId
     importance: 'high' | 'medium' | 'low';
 }
 
@@ -193,9 +192,11 @@ export interface SearchState {
 /**
  * Comparison page state
  */
+/**
+ * Comparison page state
+ */
 export interface CompareState {
-    vehicleA: NormalizedSpec | null;
-    vehicleB: NormalizedSpec | null;
+    vehicles: NormalizedSpec[];
     comparison: ComparisonResult | null;
     highlights: ComparisonHighlight[];
     isLoading: boolean;

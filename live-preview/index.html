@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoCompare - Live Preview</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="badge">Next.js 14 / MySQL / TailwindCSS</div>
+      <h1 class="hero-title">AutoCompare<br /><span>Smart Vehicle Comparison</span></h1>
+      <p class="hero-subtitle">
+        Modern JavaScript web application that lets your users compare vehicles side-by-side,
+        visualize specs with charts, and manage a full vehicle database from a beautiful admin panel.
+      </p>
+      <div class="hero-actions">
+        <a href="#demo" class="btn btn-primary">View Screens</a>
+        <a href="#features" class="btn btn-secondary">Key Features</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- SECTIONS WRAPPER -->
+  <main class="page">
+    <!-- FRONTEND PREVIEW -->
+    <section id="demo" class="section">
+      <div class="section-header">
+        <h2>Frontend Experience</h2>
+        <p>What your visitors see when they compare vehicles.</p>
+      </div>
+      <div class="screenshots">
+        <figure class="screenshot">
+          <img src="home.jpg" alt="AutoCompare landing page" />
+          <figcaption>Landing page with vehicle search and dark / light toggle.</figcaption>
+        </figure>
+        <figure class="screenshot">
+          <img src="compare.jpg" alt="Vehicle comparison view" />
+          <figcaption>Side-by-side comparison with quick stats and spec table.</figcaption>
+        </figure>
+      </div>
+      <div class="cards-grid">
+        <article class="card">
+          <h3>Landing &amp; Search</h3>
+          <p>
+            Neo‑brutalism landing page with powerful search that lets the user pick vehicles using
+            fuzzy search and smart suggestions. Fully responsive and optimized for desktop and mobile.
+          </p>
+          <ul class="card-list">
+            <li>Search by make / model / year</li>
+            <li>Client-side comparison store (Zustand)</li>
+            <li>Instant navigation to comparison view</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Comparison View</h3>
+          <p>
+            Side‑by‑side comparison layout with quick stats, spec table and visual charts. Highlighted
+            winners per category help users understand differences in seconds.
+          </p>
+          <ul class="card-list">
+            <li>Up to 4 vehicles at once</li>
+            <li>Performance, fuel and capacity sections</li>
+            <li>Export comparison as PDF report</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Dark Mode</h3>
+          <p>
+            Built‑in light / dark theme toggle powered by a small ThemeContext with localStorage
+            persistence. Works on all pages including the admin panel.
+          </p>
+          <ul class="card-list">
+            <li>CSS variables for both themes</li>
+            <li>No layout shift or flash of wrong theme</li>
+            <li>One switch for the whole application</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- ADMIN -->
+    <section id="features" class="section section-alt">
+      <div class="section-header">
+        <h2>Admin Dashboard</h2>
+        <p>Manage the full vehicle catalog with a clean, focused interface.</p>
+      </div>
+      <div class="screenshots">
+        <figure class="screenshot">
+          <img src="admin.jpg" alt="Admin vehicles table" />
+          <figcaption>Vehicle table with bulk actions, export and import tools.</figcaption>
+        </figure>
+        <figure class="screenshot">
+          <img src="admin dark.jpg" alt="Admin dashboard dark mode" />
+          <figcaption>Same admin dashboard in dark mode using the built-in theme switcher.</figcaption>
+        </figure>
+      </div>
+      <div class="cards-grid">
+        <article class="card">
+          <h3>Fleet Manager</h3>
+          <p>
+            Table‑based dashboard for all vehicles with image, specs, price and quick actions.
+            Includes bulk selection and delete confirmation modals.
+          </p>
+          <ul class="card-list">
+            <li>Search by make or model</li>
+            <li>CSV export of the current database</li>
+            <li>Soft neo‑brutalism UI with bold accents</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Add &amp; Edit Forms</h3>
+          <p>
+            Structured two‑column forms for basic and technical specs. Validation is done on the
+            server via Next.js API routes and MySQL.
+          </p>
+          <ul class="card-list">
+            <li>Normalized make / model naming</li>
+            <li>Image URL with brand‑logo fallback</li>
+            <li>Reusable form layout for add / edit</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>CSV Import</h3>
+          <p>
+            Import hundreds of vehicles in one go using a simple CSV format. Includes a small
+            preview table and error summary so the admin knows exactly what happened.
+          </p>
+          <ul class="card-list">
+            <li>Flexible column mapping (make, model, year, price, …)</li>
+            <li>Success / fail counters with messages</li>
+            <li>Perfect for seeding demo data</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- TECH -->
+    <section class="section">
+      <div class="section-header">
+        <h2>Tech Stack</h2>
+        <p>Modern, production‑ready tools. No outdated dependencies.</p>
+      </div>
+      <div class="stack-grid">
+        <div class="stack-item">
+          <h3>Frontend</h3>
+          <ul>
+            <li>Next.js 14 App Router</li>
+            <li>React 18 + TypeScript</li>
+            <li>TailwindCSS + custom neo‑brutalist theme</li>
+          </ul>
+        </div>
+        <div class="stack-item">
+          <h3>Backend</h3>
+          <ul>
+            <li>MySQL with mysql2/promise pool</li>
+            <li>Server‑side API routes for auth &amp; CRUD</li>
+            <li>BCrypt password hashing for admins</li>
+          </ul>
+        </div>
+        <div class="stack-item">
+          <h3>Extras</h3>
+          <ul>
+            <li>Zustand comparison store</li>
+            <li>Recharts visual charts</li>
+            <li>jsPDF + html2canvas PDF export</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+    
+    <!-- DOCUMENTATION LINK -->
+    <section id="docs" class="section section-alt">
+      <div class="section-header">
+        <h2>Documentation</h2>
+        <p>Step‑by‑step installation and configuration guide.</p>
+      </div>
+      <p class="docs-link">
+        <a href="../documentation/index.html" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+          Open HTML Documentation
+        </a>
+      </p>
+    </section>
+
+    <!-- FOOTER -->
+    <section class="section footer">
+      <p class="footer-title">AutoCompare &mdash; Smart Vehicle Comparison Platform</p>
+      <p class="footer-note">This page is a static HTML live preview only. The full product is a Next.js + MySQL application shipped in the main download ZIP.</p>
+    </section>
+  </main>
+</body>
+</html>

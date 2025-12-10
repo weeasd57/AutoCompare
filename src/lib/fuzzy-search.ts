@@ -3,12 +3,12 @@
 // Uses Fuse.js for intelligent matching
 // ============================================
 
-import Fuse from 'fuse.js';
+import Fuse, { IFuseOptions } from 'fuse.js';
 import type { VehicleSuggestion, VehicleMake, VehicleModel } from '@/types/vehicle';
 import { getAvailableYears } from './vpic';
 
 // Fuse.js configuration for optimal vehicle search
-const FUSE_OPTIONS: Fuse.IFuseOptions<VehicleSuggestion> = {
+const FUSE_OPTIONS: IFuseOptions<VehicleSuggestion> = {
     // Which keys to search in
     keys: [
         { name: 'displayName', weight: 0.5 },

@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    // Force restart timestamp: 2025-12-08
     // Enable React strict mode for better debugging
     reactStrictMode: true,
 
