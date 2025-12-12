@@ -8,7 +8,11 @@ const pool = mysql.createPool({
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'autocompare',
     port: Number(process.env.DB_PORT || 3306),
-    connectionLimit: 10
+    connectionLimit: 10,
+    // Enable SSL for TiDB Serverless and other cloud databases
+    ssl: process.env.DB_HOST?.includes('tidbcloud') || process.env.DB_SSL === 'true'
+        ? { rejectUnauthorized: true }
+        : undefined
 });
 
 export async function query<T = any>(sql: string, params: any[] = []): Promise<T[]> {
