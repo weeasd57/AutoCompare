@@ -4,7 +4,7 @@
 // ============================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { compareVehicles, generateHighlights, getComparisonSummary, calculateComparisonScore } from '@/lib/compare-engine';
+import { compareVehicles, generateHighlights, getComparisonSummary, calculateComparisonScores } from '@/lib/compare-engine';
 import type { NormalizedSpec } from '@/types/vehicle';
 
 /**
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
         const summary = getComparisonSummary(comparison);
 
         // Calculate scores
-        const scores = calculateComparisonScore(comparison);
+        const scores = calculateComparisonScores(comparison);
 
         return NextResponse.json({
             comparison,
