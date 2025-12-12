@@ -75,7 +75,16 @@ export function SearchAutocomplete({
 
         // Use local search - no API calls!
         const results = searchVehicles(debouncedQuery, 8);
-        setSuggestions(results);
+        // Transform NormalizedSpec to VehicleSuggestion
+        const suggestions: VehicleSuggestion[] = results.map(vehicle => ({
+            id: vehicle.id,
+            displayName: `${vehicle.make} ${vehicle.model} ${vehicle.year}${vehicle.trim ? ` ${vehicle.trim}` : ''}`,
+            make: vehicle.make,
+            model: vehicle.model,
+            year: vehicle.year,
+            trim: vehicle.trim ?? undefined,
+        }));
+        setSuggestions(suggestions);
     }, [debouncedQuery, searchVehicles, isLoaded]);
 
     /**
