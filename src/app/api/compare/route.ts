@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Run comparison
-        const comparison = compareVehicles(vehicleA, vehicleB);
+        const comparison = compareVehicles([vehicleA, vehicleB]);
 
         // Generate highlights
         const maxHighlights = body.maxHighlights || 5;
