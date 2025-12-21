@@ -6,8 +6,9 @@
 'use client';
 
 import { Sparkles, TrendingUp, Trophy } from 'lucide-react';
-import type { ComparisonHighlight, NormalizedSpec } from '@/types/vehicle';
+import { ComparisonHighlight, NormalizedSpec } from '@/types/vehicle';
 import { clsx } from 'clsx';
+import { useSettings } from '@/context/SettingsContext';
 
 interface InsightsPanelProps {
     highlights: ComparisonHighlight[];
@@ -38,6 +39,7 @@ export function InsightsPanel({
     summary,
     className,
 }: InsightsPanelProps) {
+    const { settings } = useSettings();
     if (highlights.length === 0) {
         return null;
     }
@@ -48,7 +50,10 @@ export function InsightsPanel({
             className
         )}>
             {/* Header */}
-            <div className="px-6 py-4 bg-purple-500 border-b-2 border-black">
+            <div
+                className="px-6 py-4 border-b-2 border-black"
+                style={{ backgroundColor: settings.primaryColor }}
+            >
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white border-2 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_black]">
                         <Sparkles className="w-5 h-5 text-black" />
@@ -131,14 +136,18 @@ export function QuickStats({
     className?: string;
     vehicles?: NormalizedSpec[];
 }) {
+    const { settings } = useSettings();
     // If no wins, showing nothing or empty state
     if (!wins || Object.keys(wins).length === 0) return null;
 
     return (
-        <div className={clsx(
-            'p-6 neo-card bg-orange-100', // Neo card
-            className
-        )}>
+        <div
+            className={clsx(
+                'p-6 neo-card', // Neo card
+                className
+            )}
+            style={{ backgroundColor: settings.primaryColor + '33' }}
+        >
             {/* Title */}
             <div className="flex items-center gap-2 mb-4">
                 <Trophy className="w-6 h-6 text-black" />

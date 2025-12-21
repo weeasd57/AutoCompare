@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, Lock, User } from 'lucide-react';
 import { clsx } from 'clsx';
-import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function AdminLogin() {
     const [email, setEmail] = useState('');
@@ -47,11 +46,14 @@ export default function AdminLogin() {
         }
     };
 
+    const fillDemoAccount = () => {
+        setEmail('admin@demo.com');
+        setPassword('123456');
+        setError(null);
+    };
+
     return (
         <div className="min-h-screen bg-neo-grid flex items-center justify-center p-4 text-black">
-            <div className="fixed top-4 right-4 z-50">
-                <ThemeToggle />
-            </div>
             <div className="max-w-md w-full">
                 {/* Header */}
                 <div className="text-center mb-8">
@@ -75,12 +77,13 @@ export default function AdminLogin() {
                     <form onSubmit={handleLogin} className="space-y-6">
                         {/* Email */}
                         <div>
-                            <label className="block text-sm font-bold uppercase mb-2">Email</label>
+                            <label htmlFor="email" className="block text-sm font-bold uppercase mb-2">Email</label>
                             <div className="relative">
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                                     <User className="w-5 h-5" />
                                 </div>
                                 <input
+                                    id="email"
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -93,12 +96,13 @@ export default function AdminLogin() {
 
                         {/* Password */}
                         <div>
-                            <label className="block text-sm font-bold uppercase mb-2">Password</label>
+                            <label htmlFor="password" className="block text-sm font-bold uppercase mb-2">Password</label>
                             <div className="relative">
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                                     <Lock className="w-5 h-5" />
                                 </div>
                                 <input
+                                    id="password"
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -109,21 +113,30 @@ export default function AdminLogin() {
                             </div>
                         </div>
 
-                        {/* Submit */}
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className={clsx(
-                                "w-full py-4 text-black font-black uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center",
-                                loading ? "bg-gray-100 cursor-not-allowed" : "bg-yellow-400 hover:bg-yellow-500"
-                            )}
-                        >
-                            {loading ? (
-                                <span className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                                "Sign In"
-                            )}
-                        </button>
+                        <div className="flex flex-col gap-3">
+                            <button
+                                type="button"
+                                onClick={fillDemoAccount}
+                                className="w-full py-3 border-2 border-black font-black uppercase tracking-wider bg-white hover:bg-gray-100 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+                            >
+                                Use Demo Admin
+                            </button>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className={clsx(
+                                    "w-full py-4 text-black font-black uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center",
+                                    loading ? "bg-gray-100 cursor-not-allowed" : "bg-yellow-400 hover:bg-yellow-500"
+                                )}
+                            >
+                                {loading ? (
+                                    <span className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    "Sign In"
+                                )}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

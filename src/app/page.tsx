@@ -8,13 +8,16 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { ArrowRight, Zap, BarChart2, FileText, Sparkles, Car, ChevronDown, Truck, CarFront } from 'lucide-react';
 import { VehicleSelector } from '@/components/VehicleSelector';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { useCompareStore } from '@/store/compare-store';
 import { useVehicles } from '@/context/VehicleContext';
+import { useSettings } from '@/context/SettingsContext';
 import type { NormalizedSpec } from '@/types/vehicle';
+import { useToast } from '@/context/ToastContext';
 import { clsx } from 'clsx';
+import { GoogleAdSlot } from '@/components/GoogleAdSlot';
 
 /**
  * Feature card data
@@ -22,29 +25,29 @@ import { clsx } from 'clsx';
 const FEATURES = [
     {
         icon: Zap,
-        title: 'Smart Search',
-        description: 'Find any vehicle instantly with fuzzy search. Just start typing!',
+        title: 'Easy to use',
+        description: 'Simple, clear interface so visitors can compare vehicles without any confusion.',
         color: 'from-amber-500/20 to-amber-600/10',
         iconColor: 'text-amber-400',
     },
     {
         icon: BarChart2,
-        title: 'Spec Comparison',
-        description: 'Side-by-side specs comparison with winner highlighting.',
+        title: 'Accurate comparisons',
+        description: 'See all key specs side by side so customers can choose the best vehicle with confidence.',
         color: 'from-green-500/20 to-green-600/10',
         iconColor: 'text-green-400',
     },
     {
         icon: Sparkles,
-        title: 'Key Insights',
-        description: 'Get instant insights on which vehicle wins in each category.',
+        title: 'Fast experience',
+        description: 'Optimized for quick browsing and smooth loading on both mobile and desktop.',
         color: 'from-primary-500/20 to-primary-600/10',
         iconColor: 'text-primary-400',
     },
     {
         icon: FileText,
-        title: 'PDF Export',
-        description: 'Download your comparison as a professional PDF report.',
+        title: 'Ready-to-print PDF',
+        description: 'Download a professional comparison report as a PDF for clients or printing.',
         color: 'from-purple-500/20 to-purple-600/10',
         iconColor: 'text-purple-400',
     },
@@ -58,11 +61,15 @@ export default function HomePage() {
     const router = useRouter();
     const { addVehicle, clearVehicles, reset } = useCompareStore();
     const { isLoaded } = useVehicles();
+    const { settings } = useSettings();
+    const toast = useToast();
 
     // Selected vehicles state (use full specs from selector)
     const [selectedA, setSelectedA] = useState<NormalizedSpec | null>(null);
     const [selectedB, setSelectedB] = useState<NormalizedSpec | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+
+    const adsenseHomeSlot = process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME;
 
     // Reset store on mount
     useEffect(() => {
@@ -86,7 +93,7 @@ export default function HomePage() {
      */
     const handleCompare = async () => {
         if (!selectedA || !selectedB) {
-            alert('Please select two vehicles to compare');
+            toast.warning('Please select two vehicles to compare');
             return;
         }
 
@@ -103,7 +110,7 @@ export default function HomePage() {
 
         } catch (error) {
             console.error('Error:', error);
-            alert('Failed to load vehicle data. Please try again.');
+            toast.error('Failed to load vehicle data. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -143,35 +150,53 @@ export default function HomePage() {
 
     return (
         <div className="min-h-screen bg-neo-grid">
-            {/* Theme Toggle - Fixed Position */}
-            <div className="fixed top-4 right-4 z-50">
-                <ThemeToggle />
-            </div>
-
             {/* Hero Section */}
             <section className="relative pt-20 pb-32 px-4 overflow-hidden">
-                <div className="relative max-w-6xl mx-auto text-center">
+                <div className="relative max-w-6xl mx-auto">
                     {/* Badge */}
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 border-2 border-black shadow-[4px_4px_0px_0px_black] mb-8 transform -rotate-2 hover:rotate-0 transition-transform">
+                    <div
+                        className="inline-flex items-center gap-2 px-4 py-2 border-2 border-black shadow-[4px_4px_0px_0px_black] mb-8 transform -rotate-2 hover:rotate-0 transition-transform"
+                        style={{ backgroundColor: settings.primaryColor }}
+                    >
                         <Sparkles className="w-4 h-4 text-black" />
-                        <span className="text-sm font-black uppercase text-black">Auto Compare</span>
+                        <span className="text-sm font-black uppercase text-black">{settings.siteName}</span>
                     </div>
 
-                    {/* Title */}
-                    <h1 className="text-5xl md:text-7xl font-black mb-6 uppercase leading-tight tracking-tight">
-                        <span className="bg-black text-white px-4 py-1 transform skew-x-[-10deg] inline-block">Compare</span>
-                        <br />
-                        <span className="text-black">Like Never Before</span>
-                    </h1>
+                    <div className="grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-10 items-center">
+                        <div className="text-center lg:text-left">
+                            {/* Title */}
+                            <h1 className="text-5xl md:text-7xl font-black mb-6 uppercase leading-tight tracking-tight">
+                                <span className="bg-black text-white px-4 py-1 transform skew-x-[-10deg] inline-block">Compare</span>
+                                <br />
+                                <span className="text-black">Like Never Before</span>
+                            </h1>
 
-                    {/* Subtitle */}
-                    <p className="text-xl font-bold text-gray-600 max-w-2xl mx-auto mb-12 border-l-4 border-black pl-4 text-left md:text-center md:border-l-0 md:pl-0">
-                        Find your perfect vehicle by comparing specs, fuel economy, pricing, and more.
-                        Get instant insights to make the right choice.
-                    </p>
+                            {/* Subtitle */}
+                            <p className="text-xl font-bold text-gray-600 max-w-2xl mx-auto lg:mx-0 mb-8 border-l-4 border-black pl-4 text-left">
+                                {settings.siteDescription}
+                            </p>
+                        </div>
+
+                        {settings.homeHeroImageUrl && (
+                            <div className="relative flex items-center justify-center mt-8 lg:mt-0">
+                                <div className="absolute -inset-6 bg-gradient-to-tr from-yellow-300/40 via-transparent to-blue-400/30 rounded-[2rem] blur-2xl animate-pulse" aria-hidden="true" />
+                                <div className="relative border-4 border-black rounded-[2rem] bg-white/80 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] overflow-hidden transform hover:-translate-y-2 hover:translate-x-1 transition-transform duration-300">
+                                    <Image
+                                        src={settings.homeHeroImageUrl}
+                                        alt="Hero vehicle"
+                                        width={640}
+                                        height={360}
+                                        priority
+                                        unoptimized
+                                        className="w-full h-auto object-contain bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     {/* Search Section */}
-                    <div className="max-w-4xl mx-auto">
+                    <div className="max-w-4xl mx-auto mt-12">
                         <div className="p-8 bg-white border-3 border-black shadow-[8px_8px_0px_0px_black]">
                             {/* Loading state */}
                             {!isLoaded && (
@@ -202,7 +227,10 @@ export default function HomePage() {
                                 </div>
 
                                 {/* VS Divider */}
-                                <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-yellow-400 border-3 border-black items-center justify-center z-10 shadow-[4px_4px_0px_0px_black] transform rotate-12">
+                                <div
+                                    className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 border-3 border-black items-center justify-center z-10 shadow-[4px_4px_0px_0px_black] transform rotate-12"
+                                    style={{ backgroundColor: settings.primaryColor }}
+                                >
                                     <span className="text-xl font-black text-black">VS</span>
                                 </div>
 
@@ -267,7 +295,7 @@ export default function HomePage() {
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl md:text-4xl font-black mb-4 uppercase">
-                            <span className="bg-yellow-400 text-black px-3 py-1">Popular</span> Comparisons
+                            <span className="text-black px-3 py-1" style={{ backgroundColor: settings.primaryColor }}>Popular</span> Comparisons
                         </h2>
                         <p className="text-lg font-medium text-gray-600 dark:text-gray-400">
                             See what other car buyers are comparing
@@ -287,7 +315,10 @@ export default function HomePage() {
                                 key={index}
                                 className="p-5 bg-gray-50 dark:bg-gray-800 border-3 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_black] dark:hover:shadow-[6px_6px_0px_0px_white] transition-all cursor-pointer"
                             >
-                                <span className="inline-block px-2 py-1 bg-yellow-400 text-black text-xs font-bold uppercase mb-3">
+                                <span
+                                    className="inline-block px-2 py-1 text-black text-xs font-bold uppercase mb-3"
+                                    style={{ backgroundColor: settings.primaryColor }}
+                                >
                                     {comparison.category}
                                 </span>
                                 <div className="flex items-center justify-between gap-2">
@@ -320,7 +351,10 @@ export default function HomePage() {
                             { step: '3', title: 'Make Decision', desc: 'Export results to PDF and share with others', icon: FileText },
                         ].map((item, index) => (
                             <div key={index} className="text-center">
-                                <div className="w-20 h-20 mx-auto mb-4 bg-yellow-400 border-3 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] flex items-center justify-center transform rotate-3 hover:rotate-0 transition-transform">
+                                <div
+                                    className="w-20 h-20 mx-auto mb-4 border-3 border-black dark:border-white shadow-[4px_4px_0px_0px_black] dark:shadow-[4px_4px_0px_0px_white] flex items-center justify-center transform rotate-3 hover:rotate-0 transition-transform"
+                                    style={{ backgroundColor: settings.primaryColor }}
+                                >
                                     <span className="text-3xl font-black text-black">{item.step}</span>
                                 </div>
                                 <h3 className="text-xl font-black uppercase mb-2">{item.title}</h3>
@@ -336,33 +370,33 @@ export default function HomePage() {
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-10">
                         <h2 className="text-3xl md:text-4xl font-black uppercase mb-3">
-                            Why <span className="bg-yellow-400 text-black px-2">AutoCompare</span>?
+                            Why <span className="text-black px-2" style={{ backgroundColor: settings.primaryColor }}>{settings.siteName}</span>?
                         </h2>
                         <p className="text-sm md:text-base text-gray-400 font-medium">
-                            Production-ready stack with real features for automotive websites and dealers.
+                            A modern car comparison experience designed to help visitors choose the right vehicle faster.
                         </p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
-                        <div className="p-4 border-2 border-yellow-400 bg-black/40">
-                            <h3 className="text-lg font-black mb-2">Next.js 14 + MySQL</h3>
+                        <div className="p-4 border-2 bg-black/40" style={{ borderColor: settings.primaryColor }}>
+                            <h3 className="text-lg font-black mb-2">Fast Vehicle Search</h3>
                             <p className="text-sm text-gray-300">
-                                Modern App Router architecture with MySQL database and connection pooling.
+                                Quickly find the ideal car by filtering make, model, year, body style, and more.
                             </p>
                         </div>
-                        <div className="p-4 border-2 border-yellow-400 bg-black/40">
-                            <h3 className="text-lg font-black mb-2">Full Admin Panel</h3>
+                        <div className="p-4 border-2 bg-black/40" style={{ borderColor: settings.primaryColor }}>
+                            <h3 className="text-lg font-black mb-2">Rich Vehicle Pages</h3>
                             <p className="text-sm text-gray-300">
-                                Secure login, CRUD for vehicles, bulk delete, and CSV import tools.
+                                Browse modern detail pages with image galleries, key specs, and pricing in one place.
                             </p>
                         </div>
-                        <div className="p-4 border-2 border-yellow-400 bg-black/40">
+                        <div className="p-4 border-2 bg-black/40" style={{ borderColor: settings.primaryColor }}>
                             <h3 className="text-lg font-black mb-2">Smart Comparison Engine</h3>
                             <p className="text-sm text-gray-300">
                                 Normalized specs, winner highlighting, and interactive charts with Recharts.
                             </p>
                         </div>
-                        <div className="p-4 border-2 border-yellow-400 bg-black/40">
+                        <div className="p-4 border-2 bg-black/40" style={{ borderColor: settings.primaryColor }}>
                             <h3 className="text-lg font-black mb-2">PDF Export & Dark Mode</h3>
                             <p className="text-sm text-gray-300">
                                 One-click PDF reports plus built-in light/dark themes with persistence.
@@ -373,6 +407,13 @@ export default function HomePage() {
             </section>
 
             {/* Features Section */}
+            {adsenseHomeSlot && (
+                <section className="py-8 px-4 bg-white border-t-4 border-black">
+                    <div className="max-w-6xl mx-auto">
+                        <GoogleAdSlot slot={adsenseHomeSlot} />
+                    </div>
+                </section>
+            )}
             <section className="py-24 px-4 bg-yellow-50 dark:bg-gray-900 border-t-4 border-black dark:border-white">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-16">
@@ -397,8 +438,8 @@ export default function HomePage() {
                             >
                                 <div className={clsx(
                                     'w-14 h-14 border-2 border-black flex items-center justify-center mb-4',
-                                    'bg-yellow-300 shadow-[3px_3px_0px_0px_black]'
-                                )}>
+                                    'shadow-[3px_3px_0px_0px_black]'
+                                )} style={{ backgroundColor: settings.primaryColor }}>
                                     <feature.icon className="w-7 h-7 text-black" />
                                 </div>
                                 <h3 className="text-xl font-black text-black uppercase mb-2">{feature.title}</h3>
@@ -412,13 +453,13 @@ export default function HomePage() {
             <footer className="py-10 px-4 bg-black text-white">
                 <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-yellow-400 border-2 border-white">
+                        <div className="p-2 border-2 border-white" style={{ backgroundColor: settings.primaryColor }}>
                             <Car className="w-6 h-6 text-black" />
                         </div>
-                        <span className="text-2xl font-black uppercase tracking-wider">AutoCompare</span>
+                        <span className="text-2xl font-black uppercase tracking-wider">{settings.siteName}</span>
                     </div>
                     <p className="text-sm font-mono text-gray-400">
-                        © {new Date().getFullYear()} AUTOCOMPARE
+                        © {new Date().getFullYear()} {settings.siteName.toUpperCase()}
                     </p>
                 </div>
             </footer>

@@ -9,14 +9,19 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, RefreshCw, Car, Plus } from 'lucide-react';
 import { VehicleCard } from '@/components/VehicleCard';
 import { ComparisonTable } from '@/components/ComparisonTable';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { InsightsPanel, QuickStats } from '@/components/InsightsPanel';
 import { ExportButton } from '@/components/ExportButton';
 import { VehicleSelector } from '@/components/VehicleSelector';
-import { ComparisonChart } from '@/components/ComparisonChart';
+import { ComparisonChart, EconomyChart, PriceChart } from '@/components/ComparisonChart';
+import { FavoritesPanel } from '@/components/FavoritesPanel';
+import { HistoryPanel } from '@/components/HistoryPanel';
+import { FavoriteButton } from '@/components/FavoriteButton';
 import { useCompareStore } from '@/store/compare-store';
+import { useHistoryStore } from '@/store/history-store';
 import { clsx } from 'clsx';
 import type { NormalizedSpec } from '@/types/vehicle';
+import { useSettings } from '@/context/SettingsContext';
+import { GoogleAdSlot } from '@/components/GoogleAdSlot';
 
 /**
  * Compare Page Component
@@ -36,7 +41,12 @@ export default function ComparePage() {
         reset,
     } = useCompareStore();
 
+    const { addToHistory } = useHistoryStore();
+    const { settings } = useSettings();
+
     const [mounted, setMounted] = useState(false);
+
+    const adsenseCompareSlot = process.env.NEXT_PUBLIC_ADSENSE_SLOT_COMPARE;
 
     // Handle hydration
     useEffect(() => {
@@ -49,6 +59,13 @@ export default function ComparePage() {
             runComparison();
         }
     }, [mounted, vehicles.length, comparison, isLoading, runComparison]);
+
+    // Save to history when comparison is made
+    useEffect(() => {
+        if (mounted && comparison && vehicles.length >= 2) {
+            addToHistory(vehicles);
+        }
+    }, [mounted, comparison, vehicles, addToHistory]);
 
     /**
      * Handle new comparison
@@ -112,27 +129,45 @@ export default function ComparePage() {
 
     return (
         <div className="min-h-screen pb-20">
-            {/* Header */}
-            <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b-2 border-black dark:border-white">
-                <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            {/* Page toolbar under global navbar */}
+            <header className="border-b-2 border-black dark:border-white bg-white dark:bg-gray-900">
+                <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3 md:gap-4">
                     {/* Back button */}
-                    <button
-                        onClick={handleNewComparison}
-                        className="flex items-center gap-2 text-black hover:text-blue-600 font-bold uppercase transition-colors"
-                    >
-                        <ArrowLeft className="w-6 h-6 border-2 border-black rounded-none p-1 bg-yellow-400 shadow-[2px_2px_0px_0px_black]" />
-                        <span className="hidden sm:inline">New Comparison</span>
-                    </button>
+                    <div className="flex items-center gap-2 order-1">
+                        <button
+                            onClick={handleNewComparison}
+                            className="flex items-center gap-2 text-black hover:text-blue-600 font-bold uppercase transition-colors"
+                        >
+                            <ArrowLeft
+                                className="w-6 h-6 border-2 border-black rounded-none p-1 shadow-[2px_2px_0px_0px_black]"
+                                style={{ backgroundColor: settings.primaryColor }}
+                            />
+                            <span className="hidden sm:inline">New Comparison</span>
+                        </button>
+                    </div>
 
                     {/* Title */}
-                    <div className="flex items-center gap-2 px-4 py-2 bg-black text-white transform -skew-x-12">
-                        <Car className="w-5 h-5 text-yellow-400 transform skew-x-12" />
-                        <span className="font-black uppercase tracking-wider transform skew-x-12">AutoCompare</span>
+                    <div className="order-3 w-full md:order-2 md:w-auto flex justify-center">
+                        <div className="flex items-center gap-2 px-4 py-2 bg-black text-white transform -skew-x-12">
+                            <Car className="w-5 h-5 transform skew-x-12" style={{ color: settings.primaryColor }} />
+                            <span className="font-black uppercase tracking-wider transform skew-x-12 text-sm sm:text-base md:text-sm lg:text-base">
+                                {settings.siteName}
+                            </span>
+                        </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2">
-                        <ThemeToggle />
+                    <div className="flex items-center gap-2 ml-auto order-2 md:order-3">
+                        {/* Desktop favorites/history */}
+                        <div className="hidden sm:flex items-center gap-2">
+                            <FavoritesPanel />
+                            <HistoryPanel />
+                        </div>
+                        {/* Mobile icons */}
+                        <div className="flex sm:hidden items-center gap-1">
+                            <FavoritesPanel />
+                            <HistoryPanel />
+                        </div>
                         <button
                             onClick={() => runComparison()}
                             className="p-2 bg-white dark:bg-gray-800 border-2 border-black dark:border-white hover:bg-yellow-400 text-black dark:text-white transition-all shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
@@ -152,12 +187,18 @@ export default function ComparePage() {
                         const isWinner = comparison?.overallWinner === vehicle.id;
                         // Score calculation could be better connected, but omitted for brevity
                         return (
-                            <VehicleCard
-                                key={vehicle.id}
-                                vehicle={vehicle}
-                                isWinner={isWinner}
-                                onRemove={() => removeVehicle(vehicle.id)}
-                            />
+                            <div key={vehicle.id} className="relative">
+                                <FavoriteButton
+                                    vehicle={vehicle}
+                                    className="absolute top-2 right-14 z-10"
+                                    size="sm"
+                                />
+                                <VehicleCard
+                                    vehicle={vehicle}
+                                    isWinner={isWinner}
+                                    onRemove={() => removeVehicle(vehicle.id)}
+                                />
+                            </div>
                         );
                     })}
 
@@ -166,6 +207,12 @@ export default function ComparePage() {
                         <VehicleSelector onSelect={handleAddVehicle} className="h-full" />
                     </div>
                 </div>
+
+                {adsenseCompareSlot && (
+                    <div className="mb-8">
+                        <GoogleAdSlot slot={adsenseCompareSlot} />
+                    </div>
+                )}
 
                 {/* Quick Stats */}
                 {comparison && (
@@ -178,8 +225,13 @@ export default function ComparePage() {
 
                 {/* Visual Charts */}
                 {comparison && (
-                    <div className="mb-8">
-                        <ComparisonChart vehicles={vehicles} />
+                    <div className="mb-8 space-y-6">
+                        <ComparisonChart vehicles={vehicles} wins={wins} />
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <EconomyChart vehicles={vehicles} />
+                            <PriceChart vehicles={vehicles} />
+                        </div>
                     </div>
                 )}
 

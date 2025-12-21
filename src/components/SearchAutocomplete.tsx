@@ -212,6 +212,7 @@ export function SearchAutocomplete({
                     aria-label={label || 'Search vehicles'}
                     aria-expanded={isOpen && suggestions.length > 0}
                     aria-autocomplete="list"
+                    aria-controls="search-suggestions"
                     role="combobox"
                 />
 
@@ -241,12 +242,13 @@ export function SearchAutocomplete({
                         'animate-fade-in'
                     )}
                     role="listbox"
+                    id="search-suggestions"
                 >
                     {/* No results */}
                     {suggestions.length === 0 && query.length >= 2 && (
                         <div className="px-4 py-8 text-center text-gray-400">
                             <Car className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                            <p>No vehicles found for "{query}"</p>
+                            <p>No vehicles found for &quot;{query}&quot;</p>
                             <p className="text-sm mt-1">Try a different search term</p>
                         </div>
                     )}

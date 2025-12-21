@@ -2,17 +2,23 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash2, LogOut, Car, Search, X, AlertTriangle, Upload, Download } from 'lucide-react';
+import Image from 'next/image';
+import { Plus, Trash2, LogOut, Car, Search, X, AlertTriangle, Upload, Download, Settings, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import { getBrandLogoUrl } from '@/lib/logos';
 import type { NormalizedSpec } from '@/types/vehicle';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { useToast } from '@/context/ToastContext';
+import { getAdminAuthHeaders, isDemoAdminToken } from '@/lib/admin-client';
+import { getPrimaryVehicleImageUrl } from '@/lib/vehicle-images';
 
 export default function AdminDashboard() {
     const [vehicles, setVehicles] = useState<NormalizedSpec[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isDemo, setIsDemo] = useState(false);
+    const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
     const router = useRouter();
+    const toast = useToast();
 
     // Delete modal state
     const [deleteModal, setDeleteModal] = useState<{ open: boolean; id: string | null; name: string }>({
@@ -66,16 +72,19 @@ export default function AdminDashboard() {
             router.push('/admin/login');
             return;
         }
+        setIsDemo(isDemoAdminToken(token));
         fetchVehicles();
-    }, []);
+    }, [router]);
 
     const fetchVehicles = async () => {
         try {
             const res = await fetch('/api/vehicles');
-            const data: NormalizedSpec[] = await res.json();
-            setVehicles(data);
+            const data = await res.json();
+            // Ensure data is an array
+            setVehicles(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Failed to fetch vehicles', err);
+            setVehicles([]);
         }
         setLoading(false);
     };
@@ -88,21 +97,30 @@ export default function AdminDashboard() {
     // Confirm single delete
     const confirmDelete = async () => {
         if (!deleteModal.id) return;
+        if (isDemo) {
+            toast.error('Demo admin is read-only');
+            setDeleteModal({ open: false, id: null, name: '' });
+            return;
+        }
         setDeleting(true);
 
         try {
             const res = await fetch(`/api/vehicles/${deleteModal.id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: {
+                    ...getAdminAuthHeaders(),
+                },
             });
 
             if (res.ok) {
                 fetchVehicles();
                 setDeleteModal({ open: false, id: null, name: '' });
+                toast.success('Vehicle deleted successfully');
             } else {
-                alert('Error deleting vehicle');
+                toast.error('Error deleting vehicle');
             }
         } catch (err) {
-            alert('Error deleting vehicle');
+            toast.error('Error deleting vehicle');
         } finally {
             setDeleting(false);
         }
@@ -130,17 +148,28 @@ export default function AdminDashboard() {
 
     // Bulk delete
     const confirmBulkDelete = async () => {
+        if (isDemo) {
+            toast.error('Demo admin is read-only');
+            setBulkDeleteModal(false);
+            return;
+        }
         setDeleting(true);
         try {
             const promises = Array.from(selectedIds).map(id =>
-                fetch(`/api/vehicles/${id}`, { method: 'DELETE' })
+                fetch(`/api/vehicles/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        ...getAdminAuthHeaders(),
+                    },
+                })
             );
             await Promise.all(promises);
             fetchVehicles();
             setSelectedIds(new Set());
             setBulkDeleteModal(false);
+            toast.success('Vehicles deleted successfully');
         } catch (err) {
-            alert('Error deleting vehicles');
+            toast.error('Error deleting vehicles');
         } finally {
             setDeleting(false);
         }
@@ -170,11 +199,15 @@ export default function AdminDashboard() {
                             Fleet Manager
                         </h1>
                         <p className="text-gray-500 font-medium">{vehicles.length} Vehicles in Database</p>
+                        {isDemo && (
+                            <p className="text-xs font-bold uppercase text-orange-600 mt-1">
+                                Demo admin (read-only)
+                            </p>
+                        )}
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                        <ThemeToggle />
                         {/* Bulk Delete Button */}
-                        {selectedIds.size > 0 && (
+                        {!isDemo && selectedIds.size > 0 && (
                             <button
                                 onClick={() => setBulkDeleteModal(true)}
                                 className="flex items-center gap-2 bg-red-500 text-white px-4 py-3 font-bold uppercase border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
@@ -191,17 +224,36 @@ export default function AdminDashboard() {
                             <Download className="w-4 h-4" /> Export
                         </button>
                         {/* Import CSV Button */}
+                        {!isDemo && (
+                            <Link
+                                href="/admin/import"
+                                className="flex items-center gap-2 bg-white text-black px-4 py-3 font-bold uppercase border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                            >
+                                <Upload className="w-4 h-4" /> Import
+                            </Link>
+                        )}
+                        {!isDemo && (
+                            <Link
+                                href="/admin/add"
+                                className="flex items-center gap-2 bg-yellow-400 text-black px-6 py-3 font-bold uppercase border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                            >
+                                <Plus className="w-5 h-5" /> Add Vehicle
+                            </Link>
+                        )}
+                        {!isDemo && (
+                            <Link
+                                href="/admin/batch-images"
+                                className="flex items-center gap-2 bg-white text-black px-4 py-3 font-bold uppercase border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                            >
+                                <ImageIcon className="w-4 h-4" /> Images
+                            </Link>
+                        )}
                         <Link
-                            href="/admin/import"
-                            className="flex items-center gap-2 bg-white text-black px-4 py-3 font-bold uppercase border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                            href="/admin/settings"
+                            className="p-3 bg-white text-black border-2 border-black hover:bg-gray-100 transition-colors"
+                            title="Settings"
                         >
-                            <Upload className="w-4 h-4" /> Import
-                        </Link>
-                        <Link
-                            href="/admin/add"
-                            className="flex items-center gap-2 bg-yellow-400 text-black px-6 py-3 font-bold uppercase border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-                        >
-                            <Plus className="w-5 h-5" /> Add Vehicle
+                            <Settings className="w-5 h-5" />
                         </Link>
                         <button
                             onClick={handleLogout}
@@ -236,7 +288,8 @@ export default function AdminDashboard() {
                                             type="checkbox"
                                             checked={selectedIds.size === filteredVehicles.length && filteredVehicles.length > 0}
                                             onChange={toggleSelectAll}
-                                            className="w-4 h-4 accent-black cursor-pointer"
+                                            disabled={isDemo}
+                                            className="w-4 h-4 accent-black cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                         />
                                     </th>
                                     <th className="p-4 border-r-2 border-black w-20">Image</th>
@@ -250,28 +303,31 @@ export default function AdminDashboard() {
                                 {filteredVehicles.map((vehicle, index) => (
                                     <tr
                                         key={vehicle.id}
-                                        className={`border-b border-gray-200 hover:bg-yellow-50 transition-colors ${
-                                            index === filteredVehicles.length - 1 ? 'border-b-0' : ''
-                                        }`}
+                                        className={`border-b border-gray-200 hover:bg-yellow-50 transition-colors ${index === filteredVehicles.length - 1 ? 'border-b-0' : ''
+                                            }`}
                                     >
                                         <td className="p-4 border-r border-gray-200">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedIds.has(vehicle.id)}
                                                 onChange={() => toggleSelect(vehicle.id)}
-                                                className="w-4 h-4 accent-black cursor-pointer"
+                                                disabled={isDemo}
+                                                className="w-4 h-4 accent-black cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                             />
                                         </td>
                                         <td className="p-4 border-r border-gray-200">
-                                            <div className="w-12 h-12 bg-white border border-black p-1 flex items-center justify-center">
-                                                <img
-                                                    src={vehicle.imageUrl || getBrandLogoUrl(vehicle.make)}
+                                            <div className="w-12 h-12 bg-white border border-black p-1 flex items-center justify-center relative">
+                                                <Image
+                                                    src={imageErrors[vehicle.id]
+                                                        ? getBrandLogoUrl(vehicle.make)
+                                                        : (getPrimaryVehicleImageUrl(vehicle.imageUrl) || getBrandLogoUrl(vehicle.make))}
                                                     alt={vehicle.make}
-                                                    className="max-w-full max-h-full object-contain"
-                                                    onError={(e) => {
-                                                        e.currentTarget.style.display = 'none';
-                                                        e.currentTarget.parentElement?.querySelector('.fallback-icon')?.classList.remove('hidden');
+                                                    fill
+                                                    className="object-contain p-1"
+                                                    onError={() => {
+                                                        setImageErrors(prev => ({ ...prev, [vehicle.id]: true }));
                                                     }}
+                                                    unoptimized={true} // Brand logos are small externals
                                                 />
                                                 <Car className="fallback-icon w-6 h-6 text-gray-400 hidden" />
                                             </div>
@@ -304,34 +360,39 @@ export default function AdminDashboard() {
                                         </td>
                                         <td className="p-4">
                                             <div className="flex items-center justify-center gap-2">
-                                                {/* Edit button - points to edit page */}
-                                                <Link
-                                                    href={`/admin/edit/${vehicle.id}`}
-                                                    className="p-2 bg-white border-2 border-black hover:bg-blue-100 hover:text-blue-600 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
-                                                    title="Edit Vehicle"
-                                                >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        width="16"
-                                                        height="16"
-                                                        viewBox="0 0 24 24"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        strokeWidth="2"
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                    >
-                                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                                    </svg>
-                                                </Link>
-                                                <button
-                                                    onClick={() => openDeleteModal(vehicle.id, `${vehicle.make} ${vehicle.model} ${vehicle.year}`)}
-                                                    className="p-2 bg-white border-2 border-black hover:bg-red-100 hover:text-red-600 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
-                                                    title="Delete Vehicle"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
+                                                {!isDemo ? (
+                                                    <>
+                                                        <Link
+                                                            href={`/admin/edit/${vehicle.id}`}
+                                                            className="p-2 bg-white border-2 border-black hover:bg-blue-100 hover:text-blue-600 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
+                                                            title="Edit Vehicle"
+                                                        >
+                                                            <svg
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                width="16"
+                                                                height="16"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="2"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                            >
+                                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                                            </svg>
+                                                        </Link>
+                                                        <button
+                                                            onClick={() => openDeleteModal(vehicle.id, `${vehicle.make} ${vehicle.model} ${vehicle.year}`)}
+                                                            className="p-2 bg-white border-2 border-black hover:bg-red-100 hover:text-red-600 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
+                                                            title="Delete Vehicle"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-xs font-mono text-gray-500">Read-only</span>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

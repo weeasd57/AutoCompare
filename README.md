@@ -6,6 +6,14 @@ A modern, feature-rich vehicle comparison web application built with **Next.js 1
 
 ---
 
+## 🌐 Live Demo
+
+You can try the hosted demo here:
+
+https://auto-compare.vercel.app/
+
+---
+
 ## ✨ Features
 
 ### 🏠 Frontend
@@ -89,6 +97,18 @@ DB_USER=root
 DB_PASSWORD=your_password
 DB_NAME=autocompare
 ```
+
+3. (Optional, for automatic vehicle images) Add your Google Custom Search credentials:
+
+```env
+GOOGLE_API_KEY=your_google_api_key_here
+GOOGLE_CSE_ID=11dfdf0330183431a
+```
+
+To get these values:
+
+- Enable the **Custom Search API** in Google Cloud Console and create an API key.
+- Create a Programmable Search Engine at `https://cse.google.com/cse/create` and copy the **CX** value as `GOOGLE_CSE_ID`.
 
 ### 5. Run the Application
 

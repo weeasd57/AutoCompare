@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Upload, FileText, AlertCircle, CheckCircle, X } from 'lucide-react';
 import Link from 'next/link';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { getAdminAuthHeaders, isDemoAdminToken } from '@/lib/admin-client';
 
 interface ImportResult {
     success: number;
@@ -26,6 +26,10 @@ export default function ImportPage() {
         const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
         if (!token) {
             router.push('/admin/login');
+            return;
+        }
+        if (isDemoAdminToken(token)) {
+            router.push('/admin/dashboard');
         }
     }, [router]);
 
@@ -48,7 +52,7 @@ export default function ImportPage() {
             const text = event.target?.result as string;
             const lines = text.split('\n').filter(line => line.trim());
             const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-            
+
             const data = lines.slice(1, 6).map(line => {
                 const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
                 const obj: Record<string, string> = {};
@@ -112,7 +116,7 @@ export default function ImportPage() {
                 try {
                     const res = await fetch('/api/vehicles', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', ...getAdminAuthHeaders() },
                         body: JSON.stringify(vehicleData),
                     });
 
@@ -138,9 +142,6 @@ export default function ImportPage() {
 
     return (
         <div className="min-h-screen bg-neo-grid p-8 font-sans text-black">
-            <div className="fixed top-4 right-4 z-50">
-                <ThemeToggle />
-            </div>
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
@@ -169,7 +170,14 @@ export default function ImportPage() {
 
                     {/* File Upload */}
                     <div
+                        role="button"
+                        tabIndex={0}
                         onClick={() => fileInputRef.current?.click()}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                fileInputRef.current?.click();
+                            }
+                        }}
                         className="border-4 border-dashed border-gray-300 hover:border-yellow-400 p-12 text-center cursor-pointer transition-colors mb-6"
                     >
                         <input

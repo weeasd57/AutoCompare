@@ -4,8 +4,10 @@
 
 import type { Metadata } from 'next';
 import { Inter, Outfit } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { Providers } from '@/components/Providers';
+import { MainNavbar } from '@/components/MainNavbar';
 
 // Font configuration
 const inter = Inter({
@@ -85,8 +87,19 @@ export default function RootLayout({
                 />
             </head>
             <body className="min-h-screen antialiased transition-colors duration-300">
+                {/* Google AdSense script - requires NEXT_PUBLIC_ADSENSE_CLIENT env variable */}
+                {process.env.NEXT_PUBLIC_ADSENSE_CLIENT && (
+                    <Script
+                        id="adsense-script"
+                        async
+                        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT}`}
+                        crossOrigin="anonymous"
+                        strategy="afterInteractive"
+                    />
+                )}
                 {/* All providers wrapped in client component */}
                 <Providers>
+                    <MainNavbar />
                     {/* Main content */}
                     <main className="relative">
                         {children}

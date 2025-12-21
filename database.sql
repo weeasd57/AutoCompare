@@ -1,12 +1,12 @@
 -- =============================================
--- AutoCompare Database Schema
+-- app name Database Schema
 -- Version: 1.0.0
 -- For CodeCanyon Distribution
 -- =============================================
 
 -- Create database (optional - uncomment if needed)
--- CREATE DATABASE IF NOT EXISTS autocompare CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
--- USE autocompare;
+-- CREATE DATABASE IF NOT EXISTS app name CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- USE app name;
 
 -- =============================================
 -- Table: vehicles
@@ -102,7 +102,7 @@ INSERT INTO `vehicles` (`id`, `make`, `model`, `year`, `trim`, `horsepower`, `to
 -- Initial Settings
 -- =============================================
 INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES
-('app_name', 'AutoCompare'),
+('app_name', 'app name'),
 ('app_version', '1.0.0'),
 ('setup_completed', 'false')
 ON DUPLICATE KEY UPDATE `setting_value` = VALUES(`setting_value`);

@@ -6,8 +6,9 @@
 'use client';
 
 import { CheckCircle, XCircle, Minus } from 'lucide-react';
-import type { ComparisonResult, ComparisonCategory } from '@/types/vehicle';
+import { ComparisonResult, ComparisonCategory } from '@/types/vehicle';
 import { clsx } from 'clsx';
+import { useSettings } from '@/context/SettingsContext';
 
 interface ComparisonTableProps {
     comparison: ComparisonResult;
@@ -34,6 +35,7 @@ function formatValue(value: string | number | null, unit?: string): string {
  */
 export function ComparisonTable({ comparison, className }: ComparisonTableProps) {
     const { vehicles, categories } = comparison;
+    const { settings } = useSettings();
 
     // Group categories by type
     const performanceCategories = categories.filter(c =>
@@ -56,7 +58,10 @@ export function ComparisonTable({ comparison, className }: ComparisonTableProps)
 
         return (
             <div className="mb-6">
-                <h3 className="text-sm font-black text-gray-500 uppercase tracking-wider mb-3 px-4 border-l-4 border-yellow-400 pl-2">
+                <h3
+                    className="text-sm font-black text-gray-500 uppercase tracking-wider mb-3 px-4 border-l-4 pl-2"
+                    style={{ borderLeftColor: settings.primaryColor }}
+                >
                     {title}
                 </h3>
                 <div className="space-y-0 text-black">
@@ -110,8 +115,11 @@ export function ComparisonTable({ comparison, className }: ComparisonTableProps)
             <div className="min-w-fit">
                 {/* Header */}
                 <div
-                    className="grid gap-4 px-4 py-4 bg-yellow-400 border-b-2 border-black"
-                    style={{ gridTemplateColumns: `1fr repeat(${vehicles.length}, 120px)` }}
+                    className="grid gap-4 px-4 py-4 border-b-2 border-black"
+                    style={{
+                        gridTemplateColumns: `1fr repeat(${vehicles.length}, 120px)`,
+                        backgroundColor: settings.primaryColor
+                    }}
                 >
                     <div className="text-sm font-black uppercase text-black">Specification</div>
                     {vehicles.map(vehicle => (

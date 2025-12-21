@@ -22,6 +22,22 @@ export async function POST(request: Request) {
             );
         }
 
+        // Demo admin: allow read-only showcase without touching DB
+        if (email === 'admin@demo.com' && password === '123456') {
+            const token = Buffer.from(`demo:${email}:${Date.now()}`).toString('base64');
+            return NextResponse.json({
+                success: true,
+                user: {
+                    id: 'demo',
+                    email,
+                    name: 'Demo Admin',
+                    role: 'demo'
+                },
+                token,
+                demo: true
+            });
+        }
+
         // Check if admins table exists and has records
         let admins: AdminRow[] = [];
         try {

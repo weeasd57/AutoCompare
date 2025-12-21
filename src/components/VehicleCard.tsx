@@ -7,9 +7,12 @@
 
 import { useState } from 'react';
 import { X, Car, Fuel, Zap, Settings, Users } from 'lucide-react';
+import Image from 'next/image';
 import type { NormalizedSpec } from '@/types/vehicle';
 import { clsx } from 'clsx';
 import { getBrandLogoUrl } from '@/lib/logos';
+import { getPrimaryVehicleImageUrl } from '@/lib/vehicle-images';
+import { useSettings } from '@/context/SettingsContext';
 
 interface VehicleCardProps {
     vehicle: NormalizedSpec;
@@ -33,6 +36,11 @@ export function VehicleCard({
     className,
 }: VehicleCardProps) {
     const [imageError, setImageError] = useState(false);
+    const { settings } = useSettings();
+
+    const primaryImage = getPrimaryVehicleImageUrl(vehicle.imageUrl);
+    const fallbackLogo = getBrandLogoUrl(vehicle.make);
+    const resolvedImage = imageError ? fallbackLogo : (primaryImage || fallbackLogo);
 
     // Format display name
     const displayName = `${vehicle.make} ${vehicle.model}`;
@@ -149,12 +157,16 @@ export function VehicleCard({
                 <div className="relative z-10 w-full">
                     {/* Vehicle image placeholder */}
                     <div className="w-20 h-20 bg-white border-2 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-2 relative overflow-hidden">
-                        {!imageError && (vehicle.imageUrl || getBrandLogoUrl(vehicle.make)) ? (
-                            <img
-                                src={vehicle.imageUrl || getBrandLogoUrl(vehicle.make)}
+                        {resolvedImage ? (
+                            <Image
+                                src={resolvedImage}
                                 alt={vehicle.make}
-                                className="w-full h-full object-contain"
-                                onError={() => setImageError(true)}
+                                fill
+                                className="object-contain p-2"
+                                onError={() => {
+                                    if (!imageError) setImageError(true);
+                                }}
+                                unoptimized={true}
                             />
                         ) : (
                             <Car className="w-10 h-10 text-gray-400" />
@@ -202,18 +214,22 @@ export function VehicleCard({
                 </div>
 
                 {/* Additional info */}
-                {vehicle.basePrice !== null && vehicle.basePrice > 0 && (
+                {settings.showPrices && vehicle.basePrice !== null && vehicle.basePrice > 0 && (
                     <div className="mt-4 pt-4 border-t-2 border-black border-dashed">
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-bold uppercase text-gray-500">Starting at</span>
                             <span className="text-lg font-black text-green-600">
-                                ${vehicle.basePrice.toLocaleString()}
+                                {settings.currency === 'USD' ? '$' :
+                                    settings.currency === 'EUR' ? '€' :
+                                        settings.currency === 'GBP' ? '£' :
+                                            settings.currency === 'SAR' ? 'SAR ' :
+                                                ''}{vehicle.basePrice.toLocaleString()}
                             </span>
                         </div>
                     </div>
                 )}
                 {/* Fallback for no price */}
-                {(vehicle.basePrice === null || vehicle.basePrice === 0) && (
+                {settings.showPrices && (vehicle.basePrice === null || vehicle.basePrice === 0) && (
                     <div className="mt-4 pt-4 border-t-2 border-black border-dashed">
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-bold uppercase text-gray-500">Price</span>

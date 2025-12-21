@@ -2,337 +2,365 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, CheckCircle, Database, User, Lock, ArrowRight, Loader2 } from 'lucide-react';
-
-interface SetupStatus {
-    tablesExist: boolean;
-    hasAdmins: boolean;
-    setupCompleted: boolean;
-    needsSetup: boolean;
-}
+import { AlertCircle, CheckCircle, Database, User, Lock, ArrowRight, Loader2, Download, Terminal } from 'lucide-react';
 
 export default function SetupPage() {
     const router = useRouter();
-    const [step, setStep] = useState(1);
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
+    const [step, setStep] = useState(0); // 0: Config DB, 1: Create Admin, 2: Download Env
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState(false);
-    const [status, setStatus] = useState<SetupStatus | null>(null);
 
-    const [formData, setFormData] = useState({
+    // Database Configuration State
+    const [dbConfig, setDbConfig] = useState({
+        host: 'localhost',
+        user: 'root',
+        password: '',
+        database: 'autocompare',
+        port: '3306'
+    });
+
+    // Admin Account State
+    const [adminData, setAdminData] = useState({
         name: '',
         email: '',
         password: '',
         confirmPassword: ''
     });
 
+    // Check existing setup on mount
     useEffect(() => {
-        checkSetupStatus();
-    }, []);
+        const checkStatus = async () => {
+            try {
+                const res = await fetch('/api/setup');
+                const data = await res.json();
+                if (data.setupCompleted && data.hasAdmins) {
+                    router.push('/admin/login');
+                }
+            } catch (e) {
+                // Ignore error, assume fresh start
+            }
+        };
+        checkStatus();
+    }, [router]);
 
-    const checkSetupStatus = async () => {
+    const handleCreateDatabase = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+
         try {
-            const res = await fetch('/api/setup');
-            const data = await res.json();
-            setStatus(data);
+            // Test connection first
+            const testRes = await fetch('/api/database', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'create', dbConfig, databaseName: dbConfig.database })
+            });
 
-            if (data.setupCompleted && data.hasAdmins) {
-                // Already set up, redirect to login
-                router.push('/admin/login');
-                return;
+            const data = await testRes.json();
+
+            if (!testRes.ok) {
+                throw new Error(data.error || 'Failed to connect/create database');
             }
 
-            if (data.tablesExist) {
-                setStep(2); // Skip to admin creation
-            }
-        } catch (err) {
-            setError('Failed to check setup status');
+            setStep(1); // Move to Admin creation
+        } catch (err: any) {
+            setError(err.message);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData(prev => ({
-            ...prev,
-            [e.target.name]: e.target.value
-        }));
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleCreateAdmin = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError(null);
 
-        if (formData.password !== formData.confirmPassword) {
+        if (adminData.password !== adminData.confirmPassword) {
             setError('Passwords do not match');
             return;
         }
 
-        if (formData.password.length < 6) {
-            setError('Password must be at least 6 characters');
-            return;
-        }
-
-        setSubmitting(true);
+        setLoading(true);
+        setError(null);
 
         try {
             const res = await fetch('/api/setup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    name: formData.name,
-                    email: formData.email,
-                    password: formData.password
+                    ...adminData,
+                    dbConfig // Pass config so it can connect to the new DB!
                 })
             });
 
             const data = await res.json();
 
-            if (!res.ok) {
-                setError(data.error || 'Setup failed');
-                setSubmitting(false);
-                return;
-            }
+            if (!res.ok) throw new Error(data.error);
 
-            setSuccess(true);
-            setTimeout(() => {
-                router.push('/admin/login');
-            }, 2000);
-
-        } catch (err) {
-            setError('Network error. Please try again.');
-            setSubmitting(false);
+            setStep(2); // Move to Download Env
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center text-black">
-                <div className="text-center">
-                    <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-yellow-500" />
-                    <p className="font-bold">Checking setup status...</p>
-                </div>
-            </div>
-        );
-    }
+    const downloadEnv = () => {
+        const envContent = `# Database Configuration
+DB_HOST=${dbConfig.host}
+DB_USER=${dbConfig.user}
+DB_PASSWORD=${dbConfig.password}
+DB_NAME=${dbConfig.database}
+DB_PORT=${dbConfig.port}
+DB_SSL=false
 
-    if (success) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center text-black">
-                <div className="text-center">
-                    <div className="w-20 h-20 bg-green-100 border-4 border-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle className="w-10 h-10 text-green-600" />
-                    </div>
-                    <h1 className="text-3xl font-black mb-2">Setup Complete!</h1>
-                    <p className="text-gray-500 mb-4">Redirecting to login...</p>
-                </div>
-            </div>
-        );
-    }
+# Google Custom Search JSON API (vehicle images)
+# 1) GOOGLE_API_KEY: API key from Google Cloud Console (Custom Search API enabled)
+# 2) GOOGLE_CSE_ID: Custom Search Engine ID (CX)
+GOOGLE_API_KEY=your_google_api_key_here
+GOOGLE_CSE_ID=11dfdf0330183431a`;
+
+        const blob = new Blob([envContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = '.env';
+        a.click();
+    };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 text-black">
-            <div className="max-w-lg w-full">
+        <div className="min-h-screen bg-neo-grid flex items-center justify-center p-4 text-black font-sans">
+            <div className="max-w-xl w-full">
                 {/* Header */}
                 <div className="text-center mb-8">
                     <div className="w-16 h-16 bg-yellow-400 border-4 border-black flex items-center justify-center mx-auto mb-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                         <Database className="w-8 h-8" />
                     </div>
-                    <h1 className="text-3xl font-black italic uppercase tracking-tighter mb-2">
-                        AutoCompare Setup
+                    <h1 className="text-4xl font-black italic uppercase tracking-tighter mb-2">
+                        Installation
                     </h1>
-                    <p className="text-gray-500 font-medium">
-                        Welcome! Let's set up your admin account.
-                    </p>
                 </div>
 
-                {/* Progress Steps */}
-                <div className="flex items-center justify-center gap-4 mb-8">
-                    <div className={`flex items-center gap-2 ${step >= 1 ? 'text-black' : 'text-gray-400'}`}>
-                        <div className={`w-8 h-8 border-2 border-black flex items-center justify-center font-bold ${step >= 1 ? 'bg-yellow-400' : 'bg-gray-100'}`}>
-                            1
+                {/* Steps Bar */}
+                <div className="flex items-center justify-center gap-2 mb-8 bg-white p-3 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-fit mx-auto">
+                    {[
+                        { label: 'Database', icon: Database },
+                        { label: 'Admin', icon: User },
+                        { label: 'Finish', icon: CheckCircle }
+                    ].map((s, i) => (
+                        <div key={i} className="flex items-center">
+                            <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${step === i ? 'bg-yellow-400 border-2 border-black font-bold' : 'text-gray-400'}`}>
+                                <span className="text-sm">{s.label}</span>
+                            </div>
+                            {i < 2 && <div className="w-4 h-0.5 bg-gray-300 mx-2" />}
                         </div>
-                        <span className="font-bold text-sm hidden sm:inline">Database</span>
-                    </div>
-                    <div className="w-8 h-0.5 bg-gray-300" />
-                    <div className={`flex items-center gap-2 ${step >= 2 ? 'text-black' : 'text-gray-400'}`}>
-                        <div className={`w-8 h-8 border-2 border-black flex items-center justify-center font-bold ${step >= 2 ? 'bg-yellow-400' : 'bg-gray-100'}`}>
-                            2
-                        </div>
-                        <span className="font-bold text-sm hidden sm:inline">Admin Account</span>
-                    </div>
+                    ))}
                 </div>
 
-                {/* Card */}
                 <div className="neo-card bg-white p-8">
                     {error && (
-                        <div className="mb-6 p-4 bg-red-50 border-2 border-red-500 flex items-start gap-3">
-                            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                            <p className="text-red-900 font-bold text-sm">{error}</p>
+                        <div className="mb-6 p-4 bg-red-100 border-2 border-red-500 flex items-start gap-3">
+                            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                            <p className="text-red-900 font-bold">{error}</p>
                         </div>
                     )}
 
-                    {step === 1 && (
-                        <div>
-                            <h2 className="text-xl font-black mb-4">Database Connection</h2>
-                            
-                            {status?.tablesExist ? (
-                                <div className="p-4 bg-green-50 border-2 border-green-500 mb-6">
-                                    <div className="flex items-center gap-2 text-green-700 font-bold">
-                                        <CheckCircle className="w-5 h-5" />
-                                        Database connected successfully!
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="p-4 bg-yellow-50 border-2 border-yellow-500 mb-6">
-                                    <p className="text-yellow-800 font-medium text-sm">
-                                        Please import the <code className="bg-yellow-100 px-1">database.sql</code> file into your MySQL database, then refresh this page.
-                                    </p>
-                                </div>
-                            )}
-
-                            <div className="space-y-3 text-sm">
-                                <label className="flex items-center gap-3 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={status?.tablesExist || false}
-                                        onChange={() => {}}
-                                        disabled
-                                        className="w-5 h-5 accent-green-500"
-                                    />
-                                    <span>Database tables created</span>
-                                </label>
-                            </div>
-
-                            <div className="flex gap-3 mt-6">
-                                <button
-                                    onClick={async () => {
-                                        setLoading(true);
-                                        setError(null);
-                                        try {
-                                            const res = await fetch('/api/setup/init-db', { method: 'POST' });
-                                            const data = await res.json();
-                                            if (!res.ok) {
-                                                setError(data.error || 'Failed to create tables');
-                                            } else {
-                                                await checkSetupStatus();
-                                            }
-                                        } catch (err) {
-                                            setError('Failed to initialize database');
-                                        } finally {
-                                            setLoading(false);
-                                        }
-                                    }}
-                                    disabled={status?.tablesExist}
-                                    className="flex-1 px-6 py-3 bg-blue-500 text-white font-black uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    Create Tables
-                                </button>
-                                <button
-                                    onClick={() => status?.tablesExist ? setStep(2) : checkSetupStatus()}
-                                    className="flex-1 px-6 py-3 bg-yellow-400 text-black font-black uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center gap-2"
-                                >
-                                    {status?.tablesExist ? (
-                                        <>Continue <ArrowRight className="w-5 h-5" /></>
-                                    ) : (
-                                        'Refresh Status'
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {step === 2 && (
-                        <form onSubmit={handleSubmit}>
-                            <h2 className="text-xl font-black mb-4">Create Admin Account</h2>
-                            <p className="text-gray-500 text-sm mb-6">
-                                This will be your main administrator account.
-                            </p>
-
-                            <div className="space-y-4">
+                    {/* Step 0: Database Configuration */}
+                    {step === 0 && (
+                        <form onSubmit={handleCreateDatabase} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-bold uppercase mb-2">Name</label>
-                                    <div className="relative">
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                                            <User className="w-5 h-5" />
-                                        </div>
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            value={formData.name}
-                                            onChange={handleChange}
-                                            className="w-full pl-12 pr-4 py-3 border-2 border-black font-medium focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                            placeholder="Your Name"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold uppercase mb-2">Email *</label>
+                                    <label htmlFor="dbHost" className="block text-sm font-bold uppercase mb-1">Host</label>
                                     <input
-                                        type="email"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full px-4 py-3 border-2 border-black font-medium focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                        placeholder="admin@example.com"
+                                        id="dbHost"
+                                        type="text"
+                                        value={dbConfig.host}
+                                        onChange={e => setDbConfig({ ...dbConfig, host: e.target.value })}
+                                        className="w-full p-3 border-2 border-black bg-gray-50 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
                                     />
                                 </div>
-
                                 <div>
-                                    <label className="block text-sm font-bold uppercase mb-2">Password *</label>
-                                    <div className="relative">
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                                            <Lock className="w-5 h-5" />
-                                        </div>
-                                        <input
-                                            type="password"
-                                            name="password"
-                                            value={formData.password}
-                                            onChange={handleChange}
-                                            required
-                                            minLength={6}
-                                            className="w-full pl-12 pr-4 py-3 border-2 border-black font-medium focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                            placeholder="Min 6 characters"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold uppercase mb-2">Confirm Password *</label>
+                                    <label htmlFor="dbPort" className="block text-sm font-bold uppercase mb-1">Port</label>
                                     <input
+                                        id="dbPort"
+                                        type="text"
+                                        value={dbConfig.port}
+                                        onChange={e => setDbConfig({ ...dbConfig, port: e.target.value })}
+                                        className="w-full p-3 border-2 border-black bg-gray-50 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label htmlFor="dbName" className="block text-sm font-bold uppercase mb-1">Database Name <span className="text-gray-400 text-xs">(Will be created)</span></label>
+                                <input
+                                    id="dbName"
+                                    type="text"
+                                    value={dbConfig.database}
+                                    onChange={e => setDbConfig({ ...dbConfig, database: e.target.value })}
+                                    className="w-full p-3 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none bg-yellow-50"
+                                    placeholder="autocompare"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label htmlFor="dbUser" className="block text-sm font-bold uppercase mb-1">User</label>
+                                    <input
+                                        id="dbUser"
+                                        type="text"
+                                        value={dbConfig.user}
+                                        onChange={e => setDbConfig({ ...dbConfig, user: e.target.value })}
+                                        className="w-full p-3 border-2 border-black bg-gray-50 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="dbPass" className="block text-sm font-bold uppercase mb-1">Password</label>
+                                    <input
+                                        id="dbPass"
                                         type="password"
-                                        name="confirmPassword"
-                                        value={formData.confirmPassword}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full px-4 py-3 border-2 border-black font-medium focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                        placeholder="Repeat password"
+                                        value={dbConfig.password}
+                                        onChange={e => setDbConfig({ ...dbConfig, password: e.target.value })}
+                                        className="w-full p-3 border-2 border-black bg-gray-50 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
                                     />
                                 </div>
                             </div>
 
                             <button
                                 type="submit"
-                                disabled={submitting}
-                                className="mt-6 w-full px-6 py-3 bg-green-500 text-white font-black uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                disabled={loading}
+                                className="w-full flex items-center justify-center gap-2 bg-black text-white py-4 font-black uppercase text-lg border-2 border-black shadow-[4px_4px_0px_0px_#fbbf24] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50"
                             >
-                                {submitting ? (
-                                    <><Loader2 className="w-5 h-5 animate-spin" /> Creating...</>
-                                ) : (
-                                    <>Create Admin Account <ArrowRight className="w-5 h-5" /></>
-                                )}
+                                {loading ? <Loader2 className="animate-spin" /> : <ArrowRight />}
+                                Create Database
                             </button>
                         </form>
                     )}
-                </div>
 
-                {/* Footer */}
-                <p className="text-center text-gray-400 text-sm mt-6">
-                    AutoCompare v1.0.0
-                </p>
+                    {/* Step 1: Admin Creation */}
+                    {step === 1 && (
+                        <form onSubmit={handleCreateAdmin} className="space-y-4">
+                            <div className="bg-green-100 p-4 border-2 border-green-600 mb-4 flex items-center gap-2">
+                                <CheckCircle className="text-green-600" />
+                                <span className="font-bold text-green-800">Database & Tables Created!</span>
+                            </div>
+
+                            <div>
+                                <label htmlFor="adminName" className="block text-sm font-bold uppercase mb-1">Admin Name</label>
+                                <input
+                                    id="adminName"
+                                    type="text"
+                                    required
+                                    value={adminData.name}
+                                    onChange={e => setAdminData({ ...adminData, name: e.target.value })}
+                                    className="w-full p-3 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                    placeholder="John Doe"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="adminEmail" className="block text-sm font-bold uppercase mb-1">Email</label>
+                                <input
+                                    id="adminEmail"
+                                    type="email"
+                                    required
+                                    value={adminData.email}
+                                    onChange={e => setAdminData({ ...adminData, email: e.target.value })}
+                                    className="w-full p-3 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label htmlFor="adminPass" className="block text-sm font-bold uppercase mb-1">Password</label>
+                                    <input
+                                        id="adminPass"
+                                        type="password"
+                                        required
+                                        value={adminData.password}
+                                        onChange={e => setAdminData({ ...adminData, password: e.target.value })}
+                                        className="w-full p-3 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="adminConfirm" className="block text-sm font-bold uppercase mb-1">Confirm</label>
+                                    <input
+                                        id="adminConfirm"
+                                        type="password"
+                                        required
+                                        value={adminData.confirmPassword}
+                                        onChange={e => setAdminData({ ...adminData, confirmPassword: e.target.value })}
+                                        className="w-full p-3 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full flex items-center justify-center gap-2 bg-yellow-400 text-black py-4 font-black uppercase text-lg border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50"
+                            >
+                                {loading ? <Loader2 className="animate-spin" /> : <User />}
+                                Create Account
+                            </button>
+                        </form>
+                    )}
+
+                    {/* Step 2: Download Env */}
+                    {step === 2 && (
+                        <div className="space-y-6 text-center">
+                            <div className="w-20 h-20 bg-green-100 border-4 border-green-500 rounded-full flex items-center justify-center mx-auto">
+                                <CheckCircle className="w-10 h-10 text-green-600" />
+                            </div>
+
+                            <div>
+                                <h2 className="text-2xl font-black uppercase mb-2">Setup Complete!</h2>
+                                <p className="text-gray-600 font-medium">To finalize installation, you must save your configuration.</p>
+                            </div>
+
+                            <div className="bg-gray-100 p-4 border-2 border-black text-left font-mono text-sm overflow-x-auto">
+                                <p className="text-gray-500 mb-2"># .env</p>
+                                <p>DB_HOST={dbConfig.host}</p>
+                                <p>DB_USER={dbConfig.user}</p>
+                                <p>DB_PASSWORD={dbConfig.password}</p>
+                                <p>DB_NAME={dbConfig.database}</p>
+                                <p>DB_PORT={dbConfig.port}</p>
+                                <p className="mt-3 text-gray-500"># Google Custom Search (vehicle images)</p>
+                                <p>GOOGLE_API_KEY=your_google_api_key_here</p>
+                                <p>GOOGLE_CSE_ID=11dfdf0330183431a</p>
+                            </div>
+
+                            <button
+                                onClick={downloadEnv}
+                                className="w-full flex items-center justify-center gap-2 bg-blue-500 text-white py-4 font-black uppercase text-lg border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                            >
+                                <Download />
+                                Download .env File
+                            </button>
+
+                            <div className="bg-yellow-100 p-4 border-l-4 border-yellow-500 text-left text-sm space-y-1">
+                                <p className="font-bold text-neutral-900">⚠️ IMPORTANT (.env FILE):</p>
+                                <p className="mt-1 text-neutral-900">1. Download the file above.</p>
+                                <p className="text-neutral-900">2. Rename it to <code className="bg-yellow-200 px-1 text-black font-bold">.env</code> if needed.</p>
+                                <p className="text-neutral-900">3. Upload it to your server root directory.</p>
+                                <p className="text-neutral-900">4. <strong>Restart your Node.js application.</strong></p>
+                            </div>
+
+                            <div className="bg-blue-50 p-4 border-l-4 border-blue-500 text-left text-xs md:text-sm mt-3 space-y-1">
+                                <p className="font-bold text-neutral-900">💡 Google Image Search (optional but recommended):</p>
+                                <p className="text-neutral-900">1. Open Google Cloud Console &gt; APIs &amp; Services &gt; Enable APIs, enable <strong>Custom Search API</strong>.</p>
+                                <p className="text-neutral-900">2. Create an API key and paste it into <code className="bg-yellow-200 px-1 text-black font-bold">GOOGLE_API_KEY</code> in your <code>.env</code>.</p>
+                                <p className="text-neutral-900">3. Go to <code>https://cse.google.com/cse/create</code>, create a Search Engine for the whole web, then copy the <strong>CX</strong> ID and use it as <code className="bg-yellow-200 px-1 text-black font-bold">GOOGLE_CSE_ID</code> (the default <code>11dfdf0330183431a</code> is only for testing).</p>
+                            </div>
+
+                            <button
+                                onClick={() => router.push('/admin/dashboard')}
+                                className="w-full flex items-center justify-center gap-2 bg-white text-black py-4 font-black uppercase text-lg border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                            >
+                                <Terminal className="w-5 h-5" />
+                                Go to Admin Dashboard
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

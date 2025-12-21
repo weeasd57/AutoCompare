@@ -12,11 +12,12 @@ import { useState } from 'react';
 
 interface ComparisonChartProps {
     vehicles: NormalizedSpec[];
+    wins?: Record<string, number>;
     className?: string;
 }
 
-export function ComparisonChart({ vehicles, className }: ComparisonChartProps) {
-    const [metric, setMetric] = useState<'hp' | 'torque' | 'mpg' | 'price'>('hp');
+export function ComparisonChart({ vehicles, wins, className }: ComparisonChartProps) {
+    const [metric, setMetric] = useState<string>('hp');
 
     if (vehicles.length === 0) return null;
 
@@ -27,14 +28,20 @@ export function ComparisonChart({ vehicles, className }: ComparisonChartProps) {
         torque: v.torque || 0,
         mpg: v.fuelCombinedMpg || 0,
         price: v.basePrice || 0,
+        wins: wins?.[v.id] ?? 0,
     }));
 
-    const metrics = {
+    const metrics: Record<string, { label: string; color: string }> = {
         hp: { label: 'Horsepower', color: '#3b82f6' },
         torque: { label: 'Torque (lb-ft)', color: '#f59e0b' },
         mpg: { label: 'Combined MPG', color: '#10b981' },
         price: { label: 'Base Price ($)', color: '#ec4899' },
     };
+
+    // Only add wins metric if data is provided
+    if (wins && Object.keys(wins).length > 0) {
+        metrics.wins = { label: 'Category Wins', color: '#22c55e' };
+    }
 
     return (
         <div className={clsx(
@@ -95,6 +102,122 @@ export function ComparisonChart({ vehicles, className }: ComparisonChartProps) {
                             radius={[0, 4, 4, 0]}
                             barSize={32}
                             name={metrics[metric].label}
+                        />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+        </div>
+    );
+}
+
+interface SimpleChartProps {
+    vehicles: NormalizedSpec[];
+    className?: string;
+}
+
+export function EconomyChart({ vehicles, className }: SimpleChartProps) {
+    if (vehicles.length === 0) return null;
+
+    const data = vehicles.map(v => ({
+        name: `${v.make} ${v.model}`,
+        mpg: v.fuelCombinedMpg || 0,
+    }));
+
+    return (
+        <div className={clsx('neo-card p-6', className)}>
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-black text-black uppercase">Fuel Economy (MPG)</h3>
+            </div>
+
+            <div className="w-full min-w-0 border-2 border-black bg-gray-50 p-4 shadow-inner">
+                <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={data} layout="vertical" margin={{ left: 20, right: 20 }}>
+                        <XAxis type="number" hide />
+                        <YAxis
+                            dataKey="name"
+                            type="category"
+                            width={100}
+                            tick={{ fill: '#000000', fontSize: 11, fontWeight: 700 }}
+                            axisLine={false}
+                            tickLine={false}
+                        />
+                        <Tooltip
+                            contentStyle={{
+                                backgroundColor: '#ffffff',
+                                borderColor: '#000000',
+                                borderWidth: '2px',
+                                borderRadius: '0px',
+                                color: '#000000',
+                                boxShadow: '4px 4px 0px 0px #000000',
+                            }}
+                            itemStyle={{ color: '#000000', fontWeight: 'bold' }}
+                            cursor={{ fill: 'rgba(0,0,0,0.1)' }}
+                        />
+                        <Bar
+                            dataKey="mpg"
+                            fill="#10b981"
+                            stroke="#000000"
+                            strokeWidth={2}
+                            radius={[0, 4, 4, 0]}
+                            barSize={28}
+                            name="Combined MPG"
+                        />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+        </div>
+    );
+}
+
+export function PriceChart({ vehicles, className }: SimpleChartProps) {
+    if (vehicles.length === 0) return null;
+
+    const data = vehicles.map(v => ({
+        name: `${v.make} ${v.model}`,
+        price: v.basePrice || 0,
+    }));
+
+    return (
+        <div className={clsx('neo-card p-6', className)}>
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-black text-black uppercase">Price Comparison</h3>
+            </div>
+
+            <div className="w-full min-w-0 border-2 border-black bg-gray-50 p-4 shadow-inner">
+                <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={data} margin={{ left: 20, right: 20, bottom: 40 }}>
+                        <XAxis
+                            dataKey="name"
+                            type="category"
+                            tick={{ fill: '#000000', fontSize: 11, fontWeight: 700 }}
+                            axisLine={false}
+                            tickLine={false}
+                            interval={0}
+                            angle={-20}
+                            textAnchor="end"
+                            height={60}
+                        />
+                        <YAxis type="number" hide />
+                        <Tooltip
+                            contentStyle={{
+                                backgroundColor: '#ffffff',
+                                borderColor: '#000000',
+                                borderWidth: '2px',
+                                borderRadius: '0px',
+                                color: '#000000',
+                                boxShadow: '4px 4px 0px 0px #000000',
+                            }}
+                            itemStyle={{ color: '#000000', fontWeight: 'bold' }}
+                            cursor={{ fill: 'rgba(0,0,0,0.1)' }}
+                        />
+                        <Bar
+                            dataKey="price"
+                            fill="#ec4899"
+                            stroke="#000000"
+                            strokeWidth={2}
+                            radius={[4, 4, 0, 0]}
+                            barSize={32}
+                            name="Base Price ($)"
                         />
                     </BarChart>
                 </ResponsiveContainer>

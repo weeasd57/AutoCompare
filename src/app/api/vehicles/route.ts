@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import type { NormalizedSpec } from '@/types/vehicle';
+import { requireAdminWriteAccess } from '@/lib/admin-auth';
 
 interface VehicleRow {
     id: string;
@@ -73,6 +74,9 @@ function mapRowToSpec(row: VehicleRow): NormalizedSpec {
 }
 
 export async function POST(request: Request) {
+    const guard = requireAdminWriteAccess(request);
+    if (guard) return guard;
+
     try {
         const body = await request.json();
         const {

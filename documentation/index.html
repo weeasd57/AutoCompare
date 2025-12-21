@@ -230,6 +230,7 @@
             <li><a href="#requirements">Requirements</a></li>
             <li><a href="#installation">Installation</a></li>
             <li><a href="#configuration">Configuration</a></li>
+            <li><a href="#monetization">Ads &amp; APIs</a></li>
             <li><a href="#admin">Admin Panel</a></li>
             <li><a href="#customization">Customization</a></li>
             <li><a href="#csv">CSV Import</a></li>
@@ -244,6 +245,12 @@
             <h2>📖 Introduction</h2>
             <p>Thank you for purchasing <strong>AutoCompare</strong>! This documentation will guide you through the installation, configuration, and customization of your vehicle comparison platform.</p>
             
+            <div class="alert alert-info">
+                <strong>Live Demo:</strong>
+                You can preview the application online at
+                <a href="https://auto-compare.vercel.app/" target="_blank" rel="noopener noreferrer">https://auto-compare.vercel.app/</a>.
+            </div>
+
             <h3>Features</h3>
             <ul>
                 <li><strong>Smart Comparison</strong> - Compare up to 4 vehicles side-by-side</li>
@@ -251,6 +258,11 @@
                 <li><strong>PDF Export</strong> - Export comparison results to PDF</li>
                 <li><strong>Admin Panel</strong> - Full CRUD operations for vehicles</li>
                 <li><strong>CSV Import</strong> - Bulk import vehicles from CSV files</li>
+                <li><strong>Vehicle Library</strong> - Vehicles page with search, filters, and pagination</li>
+                <li><strong>Multiple Vehicle Images</strong> - Upload images or import image URLs (stored per vehicle)</li>
+                <li><strong>Demo Admin (Read-only)</strong> - Showcase admin dashboard safely without modifying data</li>
+                <li><strong>AdSense Ready</strong> - Optional Google AdSense integration (env-based)</li>
+                <li><strong>Google Image Search API</strong> - Optional image sourcing via Google Custom Search (Image)</li>
                 <li><strong>Dark Mode</strong> - Toggle between light and dark themes</li>
                 <li><strong>Responsive Design</strong> - Works on all devices</li>
                 <li><strong>MySQL Database</strong> - Reliable data storage</li>
@@ -442,6 +454,36 @@ npm start</code></pre>
                     <td>Database name</td>
                     <td>autocompare</td>
                 </tr>
+                <tr>
+                    <td><code>NEXT_PUBLIC_ADSENSE_CLIENT</code></td>
+                    <td>Google AdSense publisher client id (public)</td>
+                    <td>(disabled)</td>
+                </tr>
+                <tr>
+                    <td><code>NEXT_PUBLIC_ADSENSE_SLOT_HOME</code></td>
+                    <td>AdSense slot id for Home page ad placement (public)</td>
+                    <td>(disabled)</td>
+                </tr>
+                <tr>
+                    <td><code>NEXT_PUBLIC_ADSENSE_SLOT_VEHICLES</code></td>
+                    <td>AdSense slot id for Vehicles page ad placement (public)</td>
+                    <td>(disabled)</td>
+                </tr>
+                <tr>
+                    <td><code>NEXT_PUBLIC_ADSENSE_SLOT_COMPARE</code></td>
+                    <td>AdSense slot id for Compare page ad placement (public)</td>
+                    <td>(disabled)</td>
+                </tr>
+                <tr>
+                    <td><code>GOOGLE_API_KEY</code></td>
+                    <td>Google API key used by server routes (keep secret)</td>
+                    <td>(disabled)</td>
+                </tr>
+                <tr>
+                    <td><code>GOOGLE_CSE_ID</code></td>
+                    <td>Google Custom Search Engine ID (Image search)</td>
+                    <td>(optional fallback)</td>
+                </tr>
             </table>
 
             <h3>Example .env.local</h3>
@@ -449,10 +491,59 @@ npm start</code></pre>
 DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=your_secure_password
-DB_NAME=autocompare</code></pre>
+DB_NAME=autocompare
+
+# Optional: Google AdSense
+NEXT_PUBLIC_ADSENSE_CLIENT=ca-pub-xxxxxxxxxxxxxxxx
+NEXT_PUBLIC_ADSENSE_SLOT_HOME=1234567890
+NEXT_PUBLIC_ADSENSE_SLOT_VEHICLES=1234567891
+NEXT_PUBLIC_ADSENSE_SLOT_COMPARE=1234567892
+
+# Optional: Google Custom Search Image API
+GOOGLE_API_KEY=your_google_api_key
+GOOGLE_CSE_ID=your_custom_search_engine_id</code></pre>
 
             <div class="alert alert-warning">
                 <strong>⚠️ Security:</strong> Never commit your <code>.env.local</code> file to version control. It contains sensitive credentials.
+            </div>
+        </section>
+
+        <!-- Ads & APIs -->
+        <section id="monetization">
+            <h2>💰 Ads &amp; External APIs</h2>
+            <p>AutoCompare includes optional integrations for monetization and vehicle image sourcing.</p>
+
+            <h3>Google AdSense</h3>
+            <p>
+                AdSense support is enabled by setting <code>NEXT_PUBLIC_ADSENSE_CLIENT</code>. The root layout will
+                load the AdSense script only when this variable is present.
+            </p>
+            <div class="alert alert-info">
+                <strong>Note:</strong> You must use your own AdSense publisher id and create your own ad units (slot ids).
+            </div>
+            <h4>Example usage (React)</h4>
+            <pre><code>import { GoogleAdSlot } from '@/components/GoogleAdSlot';
+
+export function ExamplePage() {
+  return (
+    &lt;div&gt;
+      &lt;GoogleAdSlot slot="1234567890" /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+            <h3>Google Image Search API (Custom Search)</h3>
+            <p>
+                The app provides a server API route that queries Google Custom Search (Image) to fetch candidate vehicle images.
+                This is used by admin tooling to suggest and save vehicle images.
+            </p>
+            <ul>
+                <li>Endpoint: <code>/api/vehicle-image?make=Toyota&amp;model=Camry&amp;year=2024</code></li>
+                <li>Required env vars: <code>GOOGLE_API_KEY</code>, <code>GOOGLE_CSE_ID</code></li>
+                <li>Pagination: use <code>start</code> parameter to fetch multiple results</li>
+            </ul>
+            <div class="alert alert-warning">
+                <strong>Security:</strong> Keep <code>GOOGLE_API_KEY</code> server-side only. Never expose it to the browser.
             </div>
         </section>
 
@@ -460,6 +551,16 @@ DB_NAME=autocompare</code></pre>
         <section id="admin">
             <h2>👤 Admin Panel</h2>
             <p>The admin panel allows you to manage all vehicles in your database.</p>
+
+            <div class="alert alert-info">
+                <strong>Demo Admin (Read-only):</strong> Use this account to showcase the admin dashboard safely.
+                <div style="margin-top: 10px;">
+                    <code>admin@demo.com</code> / <code>123456</code>
+                </div>
+                <div style="margin-top: 10px;">
+                    Demo admin can view data but cannot add, edit, delete, import, or clear data.
+                </div>
+            </div>
 
             <h3>Admin Routes</h3>
             <table>
@@ -491,6 +592,14 @@ DB_NAME=autocompare</code></pre>
                     <td><code>/admin/import</code></td>
                     <td>Import vehicles from CSV</td>
                 </tr>
+                <tr>
+                    <td><code>/admin/batch-images</code></td>
+                    <td>Batch image fetching and saving for vehicles</td>
+                </tr>
+                <tr>
+                    <td><code>/admin/settings</code></td>
+                    <td>App settings (branding, comparison limits, hero image, etc.)</td>
+                </tr>
             </table>
 
             <h3>Features</h3>
@@ -501,6 +610,8 @@ DB_NAME=autocompare</code></pre>
                 <li><strong>Bulk Delete</strong> - Select and delete multiple vehicles</li>
                 <li><strong>Search</strong> - Find vehicles by make, model, or year</li>
                 <li><strong>CSV Import</strong> - Bulk import from spreadsheets</li>
+                <li><strong>Vehicle Images</strong> - Upload multiple images per vehicle or import image URLs</li>
+                <li><strong>Demo Mode</strong> - Demo admin is enforced as read-only on both UI and API</li>
             </ul>
         </section>
 

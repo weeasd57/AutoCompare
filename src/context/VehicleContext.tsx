@@ -36,7 +36,7 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         async function loadVehicles() {
             try {
-                const res = await fetch('/api/vehicles');
+                const res = await fetch('/api/vehicles', { cache: 'no-store' });
                 if (!res.ok) {
                     throw new Error('Failed to load vehicles');
                 }
@@ -50,6 +50,38 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
         }
 
         loadVehicles();
+    }, []);
+
+    useEffect(() => {
+        const onVehiclesUpdated = () => {
+            setLoading(true);
+            fetch('/api/vehicles', { cache: 'no-store' })
+                .then(async (res) => {
+                    if (!res.ok) throw new Error('Failed to load vehicles');
+                    const data: NormalizedSpec[] = await res.json();
+                    setVehicles(data);
+                })
+                .catch((err) => {
+                    console.error('Failed to reload vehicle data', err);
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+        };
+
+        const onStorage = (e: StorageEvent) => {
+            if (e.key === 'autocompare_vehicles_updated_at') {
+                onVehiclesUpdated();
+            }
+        };
+
+        window.addEventListener('autocompare-vehicles-updated', onVehiclesUpdated as EventListener);
+        window.addEventListener('storage', onStorage);
+
+        return () => {
+            window.removeEventListener('autocompare-vehicles-updated', onVehiclesUpdated as EventListener);
+            window.removeEventListener('storage', onStorage);
+        };
     }, []);
 
     // Derived Data for Dropdowns

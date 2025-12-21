@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAdminWriteAccess } from '@/lib/admin-auth';
 
 interface VehicleDbRow {
     id: string;
@@ -46,9 +47,25 @@ export async function PUT(
     request: Request,
     { params }: { params: { id: string } }
 ) {
+    const guard = requireAdminWriteAccess(request);
+    if (guard) return guard;
+
     try {
         const { id } = params;
         const body = await request.json();
+
+        // Load existing row so we can support partial updates safely
+        const rows = await query<VehicleDbRow>(
+            'SELECT * FROM vehicles WHERE id = ?',
+            [id]
+        );
+
+        if (!rows || rows.length === 0) {
+            return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
+        }
+
+        const existing = rows[0];
+
         const {
             make,
             model,
@@ -64,7 +81,7 @@ export async function PUT(
             body_style,
             country,
             image_url,
-        } = body;
+        } = body as Partial<VehicleDbRow> & { fuel_combined_mpg?: number };
 
         await query(
             `UPDATE vehicles
@@ -84,20 +101,20 @@ export async function PUT(
                  image_url = ?
              WHERE id = ?`,
             [
-                make,
-                model,
-                year,
-                trim,
-                base_price,
-                horsepower,
-                engine_cylinders,
-                fuel_combined_mpg,
-                drivetrain,
-                seating_capacity,
-                fuel_type,
-                body_style,
-                country,
-                image_url,
+                make ?? existing.make,
+                model ?? existing.model,
+                year ?? existing.year,
+                trim ?? existing.trim,
+                base_price ?? existing.base_price,
+                horsepower ?? existing.horsepower,
+                engine_cylinders ?? existing.engine_cylinders,
+                fuel_combined_mpg ?? existing.fuel_combined_mpg,
+                drivetrain ?? existing.drivetrain,
+                seating_capacity ?? existing.seating_capacity,
+                fuel_type ?? existing.fuel_type,
+                body_style ?? existing.body_style,
+                country ?? existing.country,
+                image_url ?? existing.image_url,
                 id,
             ]
         );
@@ -113,6 +130,9 @@ export async function DELETE(
     request: Request,
     { params }: { params: { id: string } }
 ) {
+    const guard = requireAdminWriteAccess(request);
+    if (guard) return guard;
+
     try {
         const { id } = params;
 
