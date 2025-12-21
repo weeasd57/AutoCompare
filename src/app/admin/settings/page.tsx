@@ -24,6 +24,9 @@ import { getAdminAuthHeaders, isDemoAdminToken } from '@/lib/admin-client';
 interface SettingsState {
     siteName: string;
     siteDescription: string;
+    seoTitle: string;
+    seoDescription: string;
+    seoKeywords: string;
     primaryColor: string;
     enableComparison: boolean;
     maxCompareVehicles: number;
@@ -36,6 +39,9 @@ interface SettingsState {
 const defaultSettings: SettingsState = {
     siteName: 'AutoCompare',
     siteDescription: 'Compare vehicles side by side',
+    seoTitle: 'AutoCompare - Smart Vehicle Comparison',
+    seoDescription: 'Compare vehicles side-by-side with smart insights. Find the perfect car by comparing specs, fuel economy, pricing, and more.',
+    seoKeywords: 'car comparison, vehicle specs, auto compare, car buying, vehicle comparison tool',
     primaryColor: '#facc15',
     enableComparison: true,
     maxCompareVehicles: 4,
@@ -146,6 +152,9 @@ export default function AdminSettings() {
                 const newSettings = { ...defaultSettings };
                 if (data.siteName) newSettings.siteName = data.siteName;
                 if (data.siteDescription) newSettings.siteDescription = data.siteDescription;
+                if (data.seoTitle) newSettings.seoTitle = data.seoTitle;
+                if (data.seoDescription) newSettings.seoDescription = data.seoDescription;
+                if (data.seoKeywords) newSettings.seoKeywords = data.seoKeywords;
                 if (data.primaryColor) newSettings.primaryColor = data.primaryColor;
                 if (data.currency) newSettings.currency = data.currency;
 
@@ -182,6 +191,10 @@ export default function AdminSettings() {
 
             if (res.ok) {
                 toast.success('Settings saved to database successfully!');
+                try {
+                    localStorage.setItem('autocompare_settings_updated_at', String(Date.now()));
+                } catch { }
+                window.dispatchEvent(new Event('autocompare-settings-updated'));
             } else {
                 throw new Error('Failed to save');
             }
@@ -386,6 +399,48 @@ export default function AdminSettings() {
                                     <option value="GBP">GBP (£)</option>
                                     <option value="SAR">SAR</option>
                                 </select>
+                            </div>
+
+                            <div>
+                                <label htmlFor="seoTitle" className="block text-sm font-bold uppercase mb-1">
+                                    SEO Title
+                                </label>
+                                <input
+                                    id="seoTitle"
+                                    type="text"
+                                    value={settings.seoTitle}
+                                    onChange={(e) => setSettings({ ...settings, seoTitle: e.target.value })}
+                                    disabled={isDemo}
+                                    className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="seoDescription" className="block text-sm font-bold uppercase mb-1">
+                                    SEO Description
+                                </label>
+                                <textarea
+                                    id="seoDescription"
+                                    value={settings.seoDescription}
+                                    onChange={(e) => setSettings({ ...settings, seoDescription: e.target.value })}
+                                    disabled={isDemo}
+                                    rows={3}
+                                    className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="seoKeywords" className="block text-sm font-bold uppercase mb-1">
+                                    SEO Keywords (comma-separated)
+                                </label>
+                                <input
+                                    id="seoKeywords"
+                                    type="text"
+                                    value={settings.seoKeywords}
+                                    onChange={(e) => setSettings({ ...settings, seoKeywords: e.target.value })}
+                                    disabled={isDemo}
+                                    className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                />
                             </div>
 
                             <div>

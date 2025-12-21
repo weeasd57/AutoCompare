@@ -5,6 +5,9 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 export interface AppSettings {
     siteName: string;
     siteDescription: string;
+    seoTitle: string;
+    seoDescription: string;
+    seoKeywords: string;
     primaryColor: string;
     enableComparison: boolean;
     maxCompareVehicles: number;
@@ -17,6 +20,9 @@ export interface AppSettings {
 const defaultSettings: AppSettings = {
     siteName: 'AutoCompare',
     siteDescription: 'Compare vehicles side by side',
+    seoTitle: 'AutoCompare - Smart Vehicle Comparison',
+    seoDescription: 'Compare vehicles side-by-side with smart insights. Find the perfect car by comparing specs, fuel economy, pricing, and more.',
+    seoKeywords: 'car comparison, vehicle specs, auto compare, car buying, vehicle comparison tool',
     primaryColor: '#facc15',
     enableComparison: true,
     maxCompareVehicles: 4,
@@ -53,6 +59,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
                 // Map API response to settings object
                 if (data.siteName) newSettings.siteName = data.siteName;
                 if (data.siteDescription) newSettings.siteDescription = data.siteDescription;
+                if (data.seoTitle) newSettings.seoTitle = data.seoTitle;
+                if (data.seoDescription) newSettings.seoDescription = data.seoDescription;
+                if (data.seoKeywords) newSettings.seoKeywords = data.seoKeywords;
                 if (data.primaryColor) newSettings.primaryColor = data.primaryColor;
                 if (data.currency) newSettings.currency = data.currency;
                 if (data.homeHeroImageUrl) newSettings.homeHeroImageUrl = data.homeHeroImageUrl;
