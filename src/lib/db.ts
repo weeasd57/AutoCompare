@@ -9,8 +9,10 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME || 'autocompare',
     port: Number(process.env.DB_PORT || 3306),
     connectionLimit: 10,
-    // Enable SSL for TiDB Serverless and other cloud databases
-    ssl: process.env.DB_HOST?.includes('tidbcloud') || process.env.DB_SSL === 'true'
+    // TiDB Serverless requires SSL; use rejectUnauthorized: false to avoid self-signed cert issues while still using secure transport
+    ssl: process.env.DB_HOST?.includes('tidbcloud')
+        ? { rejectUnauthorized: false }
+        : process.env.DB_SSL === 'true'
         ? { rejectUnauthorized: true }
         : undefined
 });
