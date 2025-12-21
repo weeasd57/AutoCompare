@@ -54,6 +54,40 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================
+-- Table: vehicle_images
+-- Stores multiple vehicle images as BLOBs
+-- =============================================
+CREATE TABLE IF NOT EXISTS `vehicle_images` (
+    `id` INT AUTO_INCREMENT NOT NULL,
+    `vehicle_id` VARCHAR(191) NOT NULL,
+    `sort_order` INT NOT NULL DEFAULT 0,
+    `mime_type` VARCHAR(100) NOT NULL,
+    `image_data` MEDIUMBLOB NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `unique_vehicle_sort` (`vehicle_id`, `sort_order`),
+    INDEX `idx_vehicle_id` (`vehicle_id`),
+    CONSTRAINT `fk_vehicle_images_vehicle_id`
+        FOREIGN KEY (`vehicle_id`) REFERENCES `vehicles`(`id`)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================
+-- Table: hero_images
+-- Stores the home hero image as BLOB
+-- =============================================
+CREATE TABLE IF NOT EXISTS `hero_images` (
+    `id` INT AUTO_INCREMENT NOT NULL,
+    `mime_type` VARCHAR(100) NOT NULL,
+    `image_data` MEDIUMBLOB NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================
 -- Table: admins
 -- Stores admin user accounts
 -- =============================================
@@ -80,7 +114,7 @@ CREATE TABLE IF NOT EXISTS `admins` (
 CREATE TABLE IF NOT EXISTS `settings` (
     `id` INT AUTO_INCREMENT NOT NULL,
     `setting_key` VARCHAR(100) NOT NULL,
-    `setting_value` TEXT DEFAULT NULL,
+    `setting_value` MEDIUMTEXT DEFAULT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
@@ -102,7 +136,7 @@ INSERT INTO `vehicles` (`id`, `make`, `model`, `year`, `trim`, `horsepower`, `to
 -- Initial Settings
 -- =============================================
 INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES
-('app_name', 'app name'),
+('app_name', 'AutoCompare'),
 ('app_version', '1.0.0'),
 ('setup_completed', 'false')
 ON DUPLICATE KEY UPDATE `setting_value` = VALUES(`setting_value`);

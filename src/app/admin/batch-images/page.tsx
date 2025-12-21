@@ -23,6 +23,26 @@ export default function BatchImagesPage() {
     const { vehicles } = useVehicles();
     const toast = useToast();
 
+    const getVehicleImageErrorMessage = (payload: any) => {
+        const status = typeof payload?.status === 'number' ? payload.status : undefined;
+        const googleError = typeof payload?.googleError === 'string' ? payload.googleError : undefined;
+
+        if (status === 429) {
+            return {
+                toastMessage:
+                    'Google Image Search quota exceeded. Try again later or increase your Google Custom Search quota.',
+                inlineMessage: 'Quota exceeded. Please try again later.',
+                details: googleError,
+            };
+        }
+
+        return {
+            toastMessage: payload?.error || 'Failed to fetch image',
+            inlineMessage: payload?.error || 'Failed to fetch image',
+            details: googleError,
+        };
+    };
+
     useEffect(() => {
         const token = localStorage.getItem('admin_token');
         if (!token) {
@@ -89,7 +109,11 @@ export default function BatchImagesPage() {
                     fetch(`/api/vehicle-image?${params.toString()}`).then(async res => {
                         const data = await res.json();
                         if (!res.ok || !data.imageUrl) {
-                            throw new Error(data.error || 'Failed to fetch image');
+                            const msg = getVehicleImageErrorMessage(data);
+                            if (msg.details) {
+                                console.error('Vehicle image search error details:', msg.details);
+                            }
+                            throw new Error(msg.inlineMessage);
                         }
                         return data as { imageUrl: string };
                     })
@@ -110,13 +134,26 @@ export default function BatchImagesPage() {
                     selectedImages: imageUrls.map((_, idx) => idx),
                 },
             }));
+
+            if (imageUrls.length === 0) {
+                toast.warning(`No images found for ${vehicle.make} ${vehicle.model} ${vehicle.year}`);
+            }
         } catch (err: any) {
+            const message = err?.message || 'Failed to fetch images';
+            if (message.toLowerCase().includes('quota exceeded')) {
+                toast.warning(
+                    'Google Image Search quota exceeded. Try again later or increase your Google Custom Search quota.'
+                );
+            } else {
+                toast.error(message);
+            }
+
             setImageStates(prev => ({
                 ...prev,
                 [vehicle.id]: {
                     images: [],
                     loading: false,
-                    error: err?.message || 'Failed to fetch images',
+                    error: message,
                     selectedImages: [],
                 },
             }));

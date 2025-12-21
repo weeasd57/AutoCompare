@@ -49,10 +49,32 @@ export async function GET(request: Request) {
     url.searchParams.set('imgType', 'photo');
 
     try {
-        const res = await fetch(url.toString());
+        const res = await fetch(url.toString(), { method: 'GET' });
         if (!res.ok) {
+            let details: any = null;
+            try {
+                details = await res.json();
+            } catch {
+                try {
+                    details = await res.text();
+                } catch {
+                    details = null;
+                }
+            }
+
+            const googleMessage =
+                typeof details === 'object' && details?.error?.message
+                    ? String(details.error.message)
+                    : typeof details === 'string'
+                    ? details
+                    : null;
+
             return NextResponse.json(
-                { error: 'Failed to contact Google image search API' },
+                {
+                    error: 'Failed to contact Google image search API',
+                    status: res.status,
+                    googleError: googleMessage,
+                },
                 { status: 502 },
             );
         }
