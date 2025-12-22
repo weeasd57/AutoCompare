@@ -13,8 +13,8 @@ const pool = mysql.createPool({
     ssl: process.env.DB_HOST?.includes('tidbcloud')
         ? { rejectUnauthorized: false }
         : process.env.DB_SSL === 'true'
-        ? { rejectUnauthorized: true }
-        : undefined
+          ? { rejectUnauthorized: true }
+          : undefined,
 });
 
 export async function query<T = any>(sql: string, params: any[] = []): Promise<T[]> {

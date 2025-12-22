@@ -4,19 +4,24 @@
 // ============================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { compareVehicles, generateHighlights, getComparisonSummary, calculateComparisonScores } from '@/lib/compare-engine';
+import {
+    compareVehicles,
+    generateHighlights,
+    getComparisonSummary,
+    calculateComparisonScores,
+} from '@/lib/compare-engine';
 import type { NormalizedSpec } from '@/types/vehicle';
 
 /**
  * POST /api/compare
  * Compare two vehicles and generate insights
- * 
+ *
  * Request body:
  * - vehicleA: NormalizedSpec
  * - vehicleB: NormalizedSpec
- * 
+ *
  * OR
- * 
+ *
  * - vehicleAId: string (vehicle ID to fetch)
  * - vehicleBId: string (vehicle ID to fetch)
  */
@@ -57,8 +62,7 @@ export async function POST(request: NextRequest) {
             }
             const dataB = await responseB.json();
             vehicleB = dataB.specs;
-        }
-        else {
+        } else {
             return NextResponse.json(
                 { error: 'Please provide vehicleA/vehicleB or vehicleAId/vehicleBId' },
                 { status: 400 }
@@ -67,10 +71,7 @@ export async function POST(request: NextRequest) {
 
         // Validate vehicles
         if (!vehicleA.id || !vehicleB.id) {
-            return NextResponse.json(
-                { error: 'Invalid vehicle data' },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: 'Invalid vehicle data' }, { status: 400 });
         }
 
         // Run comparison
@@ -100,20 +101,16 @@ export async function POST(request: NextRequest) {
                 name: `${vehicleB.make} ${vehicleB.model} ${vehicleB.year}`,
             },
         });
-
     } catch (error) {
         console.error('Compare API error:', error);
-        return NextResponse.json(
-            { error: 'Failed to compare vehicles' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to compare vehicles' }, { status: 500 });
     }
 }
 
 /**
  * GET /api/compare
  * Quick comparison with query parameters
- * 
+ *
  * Query params:
  * - a: Vehicle A ID
  * - b: Vehicle B ID
@@ -141,12 +138,8 @@ export async function GET(request: NextRequest) {
 
         const data = await response.json();
         return NextResponse.json(data, { status: response.status });
-
     } catch (error) {
         console.error('Compare API GET error:', error);
-        return NextResponse.json(
-            { error: 'Failed to compare vehicles' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to compare vehicles' }, { status: 500 });
     }
 }

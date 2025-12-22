@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getPopularSuggestions } from '@/lib/fuzzy-search';
-import { getModelsForMake, getAllMakes } from '@/lib/vpic';
+import { getAllMakes } from '@/lib/vpic';
 
 /**
  * Cache for makes data
@@ -17,7 +17,7 @@ const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
 /**
  * GET /api/search
  * Search for vehicles with fuzzy matching
- * 
+ *
  * Query params:
  * - q: Search query (required)
  * - limit: Max results (optional, default 10)
@@ -70,13 +70,9 @@ export async function GET(request: NextRequest) {
             query,
             count: suggestions.length,
         });
-
     } catch (error) {
         console.error('Search API error:', error);
-        return NextResponse.json(
-            { error: 'Search failed', suggestions: [] },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Search failed', suggestions: [] }, { status: 500 });
     }
 }
 
@@ -97,12 +93,8 @@ export async function POST() {
             makesCount: makes.length,
             message: 'Search index updated',
         });
-
     } catch (error) {
         console.error('Failed to refresh search cache:', error);
-        return NextResponse.json(
-            { error: 'Failed to update search index' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to update search index' }, { status: 500 });
     }
 }

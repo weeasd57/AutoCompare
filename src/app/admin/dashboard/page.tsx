@@ -3,13 +3,26 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Plus, Trash2, LogOut, Car, Search, X, AlertTriangle, Upload, Download, Settings, Image as ImageIcon } from 'lucide-react';
+import {
+    Plus,
+    Trash2,
+    LogOut,
+    Car,
+    Search,
+    AlertTriangle,
+    Upload,
+    Download,
+    Settings,
+    Image as ImageIcon,
+} from 'lucide-react';
 import Link from 'next/link';
 import { getBrandLogoUrl } from '@/lib/logos';
 import type { NormalizedSpec } from '@/types/vehicle';
 import { useToast } from '@/context/ToastContext';
 import { getAdminAuthHeaders, isDemoAdminToken } from '@/lib/admin-client';
 import { getPrimaryVehicleImageUrl } from '@/lib/vehicle-images';
+
+const ERROR_DELETING_VEHICLE = 'Error deleting vehicle';
 
 export default function AdminDashboard() {
     const [vehicles, setVehicles] = useState<NormalizedSpec[]>([]);
@@ -21,7 +34,11 @@ export default function AdminDashboard() {
     const toast = useToast();
 
     // Delete modal state
-    const [deleteModal, setDeleteModal] = useState<{ open: boolean; id: string | null; name: string }>({
+    const [deleteModal, setDeleteModal] = useState<{
+        open: boolean;
+        id: string | null;
+        name: string;
+    }>({
         open: false,
         id: null,
         name: '',
@@ -34,10 +51,23 @@ export default function AdminDashboard() {
 
     // Export CSV function
     const exportToCSV = () => {
-        const headers = ['make', 'model', 'year', 'trim', 'base_price', 'horsepower', 'fuel_combined_mpg', 'drivetrain', 'seating_capacity', 'fuel_type', 'body_style', 'image_url'];
+        const headers = [
+            'make',
+            'model',
+            'year',
+            'trim',
+            'base_price',
+            'horsepower',
+            'fuel_combined_mpg',
+            'drivetrain',
+            'seating_capacity',
+            'fuel_type',
+            'body_style',
+            'image_url',
+        ];
         const csvRows = [headers.join(',')];
 
-        vehicles.forEach(v => {
+        vehicles.forEach((v) => {
             const row = [
                 v.make,
                 v.model,
@@ -50,8 +80,8 @@ export default function AdminDashboard() {
                 v.seatingCapacity || '',
                 v.fuelType || '',
                 v.bodyStyle || '',
-                v.imageUrl || ''
-            ].map(val => `"${String(val).replace(/"/g, '""')}"`);
+                v.imageUrl || '',
+            ].map((val) => `"${String(val).replace(/"/g, '""')}"`);
             csvRows.push(row.join(','));
         });
 
@@ -117,10 +147,11 @@ export default function AdminDashboard() {
                 setDeleteModal({ open: false, id: null, name: '' });
                 toast.success('Vehicle deleted successfully');
             } else {
-                toast.error('Error deleting vehicle');
+                toast.error(ERROR_DELETING_VEHICLE);
             }
         } catch (err) {
-            toast.error('Error deleting vehicle');
+            console.error(ERROR_DELETING_VEHICLE, err);
+            toast.error(ERROR_DELETING_VEHICLE);
         } finally {
             setDeleting(false);
         }
@@ -142,7 +173,7 @@ export default function AdminDashboard() {
         if (selectedIds.size === filteredVehicles.length) {
             setSelectedIds(new Set());
         } else {
-            setSelectedIds(new Set(filteredVehicles.map(v => v.id)));
+            setSelectedIds(new Set(filteredVehicles.map((v) => v.id)));
         }
     };
 
@@ -155,7 +186,7 @@ export default function AdminDashboard() {
         }
         setDeleting(true);
         try {
-            const promises = Array.from(selectedIds).map(id =>
+            const promises = Array.from(selectedIds).map((id) =>
                 fetch(`/api/vehicles/${id}`, {
                     method: 'DELETE',
                     headers: {
@@ -169,6 +200,7 @@ export default function AdminDashboard() {
             setBulkDeleteModal(false);
             toast.success('Vehicles deleted successfully');
         } catch (err) {
+            console.error('Error deleting vehicles', err);
             toast.error('Error deleting vehicles');
         } finally {
             setDeleting(false);
@@ -180,13 +212,18 @@ export default function AdminDashboard() {
         router.push('/admin/login');
     };
 
-    const filteredVehicles = vehicles.filter((v) =>
-        v.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        v.model.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredVehicles = vehicles.filter(
+        (v) =>
+            v.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            v.model.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     if (loading) {
-        return <div className="min-h-screen flex items-center justify-center font-bold text-xl">Loading Dashboard...</div>;
+        return (
+            <div className="min-h-screen flex items-center justify-center font-bold text-xl">
+                Loading Dashboard...
+            </div>
+        );
     }
 
     return (
@@ -198,7 +235,9 @@ export default function AdminDashboard() {
                         <h1 className="text-4xl font-black italic uppercase tracking-tighter">
                             Fleet Manager
                         </h1>
-                        <p className="text-gray-500 font-medium">{vehicles.length} Vehicles in Database</p>
+                        <p className="text-gray-500 font-medium">
+                            {vehicles.length} Vehicles in Database
+                        </p>
                         {isDemo && (
                             <p className="text-xs font-bold uppercase text-orange-600 mt-1">
                                 Demo admin (read-only)
@@ -286,7 +325,10 @@ export default function AdminDashboard() {
                                     <th className="p-4 border-r-2 border-black w-12">
                                         <input
                                             type="checkbox"
-                                            checked={selectedIds.size === filteredVehicles.length && filteredVehicles.length > 0}
+                                            checked={
+                                                selectedIds.size === filteredVehicles.length &&
+                                                filteredVehicles.length > 0
+                                            }
                                             onChange={toggleSelectAll}
                                             disabled={isDemo}
                                             className="w-4 h-4 accent-black cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
@@ -303,8 +345,11 @@ export default function AdminDashboard() {
                                 {filteredVehicles.map((vehicle, index) => (
                                     <tr
                                         key={vehicle.id}
-                                        className={`border-b border-gray-200 hover:bg-yellow-50 transition-colors ${index === filteredVehicles.length - 1 ? 'border-b-0' : ''
-                                            }`}
+                                        className={`border-b border-gray-200 hover:bg-yellow-50 transition-colors ${
+                                            index === filteredVehicles.length - 1
+                                                ? 'border-b-0'
+                                                : ''
+                                        }`}
                                     >
                                         <td className="p-4 border-r border-gray-200">
                                             <input
@@ -318,14 +363,21 @@ export default function AdminDashboard() {
                                         <td className="p-4 border-r border-gray-200">
                                             <div className="w-12 h-12 bg-white border border-black p-1 flex items-center justify-center relative">
                                                 <Image
-                                                    src={imageErrors[vehicle.id]
-                                                        ? getBrandLogoUrl(vehicle.make)
-                                                        : (getPrimaryVehicleImageUrl(vehicle.imageUrl) || getBrandLogoUrl(vehicle.make))}
+                                                    src={
+                                                        imageErrors[vehicle.id]
+                                                            ? getBrandLogoUrl(vehicle.make)
+                                                            : getPrimaryVehicleImageUrl(
+                                                                  vehicle.imageUrl
+                                                              ) || getBrandLogoUrl(vehicle.make)
+                                                    }
                                                     alt={vehicle.make}
                                                     fill
                                                     className="object-contain p-1"
                                                     onError={() => {
-                                                        setImageErrors(prev => ({ ...prev, [vehicle.id]: true }));
+                                                        setImageErrors((prev) => ({
+                                                            ...prev,
+                                                            [vehicle.id]: true,
+                                                        }));
                                                     }}
                                                     unoptimized={true} // Brand logos are small externals
                                                 />
@@ -334,26 +386,41 @@ export default function AdminDashboard() {
                                         </td>
                                         <td className="p-4 border-r border-gray-200">
                                             <div className="flex flex-col">
-                                                <span className="text-lg leading-tight uppercase font-black">{vehicle.make} {vehicle.model}</span>
-                                                <span className="text-gray-500 font-medium">{vehicle.year} • {vehicle.trim || 'Base'}</span>
+                                                <span className="text-lg leading-tight uppercase font-black">
+                                                    {vehicle.make} {vehicle.model}
+                                                </span>
+                                                <span className="text-gray-500 font-medium">
+                                                    {vehicle.year} • {vehicle.trim || 'Base'}
+                                                </span>
                                             </div>
                                         </td>
                                         <td className="p-4 border-r border-gray-200">
                                             <div className="space-y-1 text-xs text-gray-600 font-mono">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="w-8 uppercase font-bold text-black">HP:</span> {vehicle.horsepower || '-'}
+                                                    <span className="w-8 uppercase font-bold text-black">
+                                                        HP:
+                                                    </span>{' '}
+                                                    {vehicle.horsepower || '-'}
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="w-8 uppercase font-bold text-black">MPG:</span> {vehicle.fuelCombinedMpg || '-'}
+                                                    <span className="w-8 uppercase font-bold text-black">
+                                                        MPG:
+                                                    </span>{' '}
+                                                    {vehicle.fuelCombinedMpg || '-'}
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="w-8 uppercase font-bold text-black">DRV:</span> {vehicle.drivetrain || '-'}
+                                                    <span className="w-8 uppercase font-bold text-black">
+                                                        DRV:
+                                                    </span>{' '}
+                                                    {vehicle.drivetrain || '-'}
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="p-4 border-r border-gray-200">
                                             {vehicle.basePrice ? (
-                                                <span className="text-green-700 font-black">${vehicle.basePrice.toLocaleString()}</span>
+                                                <span className="text-green-700 font-black">
+                                                    ${vehicle.basePrice.toLocaleString()}
+                                                </span>
                                             ) : (
                                                 <span className="text-gray-400 italic">N/A</span>
                                             )}
@@ -383,7 +450,12 @@ export default function AdminDashboard() {
                                                             </svg>
                                                         </Link>
                                                         <button
-                                                            onClick={() => openDeleteModal(vehicle.id, `${vehicle.make} ${vehicle.model} ${vehicle.year}`)}
+                                                            onClick={() =>
+                                                                openDeleteModal(
+                                                                    vehicle.id,
+                                                                    `${vehicle.make} ${vehicle.model} ${vehicle.year}`
+                                                                )
+                                                            }
                                                             className="p-2 bg-white border-2 border-black hover:bg-red-100 hover:text-red-600 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
                                                             title="Delete Vehicle"
                                                         >
@@ -391,7 +463,9 @@ export default function AdminDashboard() {
                                                         </button>
                                                     </>
                                                 ) : (
-                                                    <span className="text-xs font-mono text-gray-500">Read-only</span>
+                                                    <span className="text-xs font-mono text-gray-500">
+                                                        Read-only
+                                                    </span>
                                                 )}
                                             </div>
                                         </td>
@@ -403,7 +477,9 @@ export default function AdminDashboard() {
 
                     {filteredVehicles.length === 0 && (
                         <div className="text-center py-12 bg-gray-50">
-                            <p className="text-gray-400 font-bold uppercase tracking-wider">No vehicles found</p>
+                            <p className="text-gray-400 font-bold uppercase tracking-wider">
+                                No vehicles found
+                            </p>
                         </div>
                     )}
                 </div>
@@ -419,7 +495,9 @@ export default function AdminDashboard() {
                             </div>
                             <div>
                                 <h3 className="text-xl font-black uppercase">Delete Vehicle</h3>
-                                <p className="text-gray-500 text-sm">This action cannot be undone</p>
+                                <p className="text-gray-500 text-sm">
+                                    This action cannot be undone
+                                </p>
                             </div>
                         </div>
                         <p className="mb-6 text-black">
@@ -453,12 +531,17 @@ export default function AdminDashboard() {
                                 <AlertTriangle className="w-6 h-6 text-red-600" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-black uppercase">Delete Multiple Vehicles</h3>
-                                <p className="text-gray-500 text-sm">This action cannot be undone</p>
+                                <h3 className="text-xl font-black uppercase">
+                                    Delete Multiple Vehicles
+                                </h3>
+                                <p className="text-gray-500 text-sm">
+                                    This action cannot be undone
+                                </p>
                             </div>
                         </div>
                         <p className="mb-6 text-black">
-                            Are you sure you want to delete <strong>{selectedIds.size} vehicles</strong>?
+                            Are you sure you want to delete{' '}
+                            <strong>{selectedIds.size} vehicles</strong>?
                         </p>
                         <div className="flex gap-4">
                             <button

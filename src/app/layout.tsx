@@ -27,8 +27,15 @@ const outfit = Outfit({
 
 export async function generateMetadata(): Promise<Metadata> {
     const fallbackTitle = 'AutoCompare - Smart Vehicle Comparison';
-    const fallbackDescription = 'Compare vehicles side-by-side with smart insights. Find the perfect car by comparing specs, fuel economy, pricing, and more.';
-    const fallbackKeywords = ['car comparison', 'vehicle specs', 'auto compare', 'car buying', 'vehicle comparison tool'];
+    const fallbackDescription =
+        'Compare vehicles side-by-side with smart insights. Find the perfect car by comparing specs, fuel economy, pricing, and more.';
+    const fallbackKeywords = [
+        'car comparison',
+        'vehicle specs',
+        'auto compare',
+        'car buying',
+        'vehicle comparison tool',
+    ];
 
     try {
         const rows = await query<{ setting_key: string; setting_value: string }>(
@@ -46,11 +53,15 @@ export async function generateMetadata(): Promise<Metadata> {
         const rawKeywords = map.get('seoKeywords');
 
         const title = rawTitle ? safeParseSetting(rawTitle, fallbackTitle) : fallbackTitle;
-        const description = rawDescription ? safeParseSetting(rawDescription, fallbackDescription) : fallbackDescription;
-        const keywordsString = rawKeywords ? safeParseSetting(rawKeywords, fallbackKeywords.join(', ')) : fallbackKeywords.join(', ');
+        const description = rawDescription
+            ? safeParseSetting(rawDescription, fallbackDescription)
+            : fallbackDescription;
+        const keywordsString = rawKeywords
+            ? safeParseSetting(rawKeywords, fallbackKeywords.join(', '))
+            : fallbackKeywords.join(', ');
         const keywords = keywordsString
             .split(',')
-            .map(s => s.trim())
+            .map((s) => s.trim())
             .filter(Boolean);
 
         return {
@@ -103,7 +114,7 @@ function safeParseSetting<T>(value: string, fallback: T): T {
     try {
         return JSON.parse(value) as T;
     } catch {
-        return value as unknown as T;
+        return fallback;
     }
 }
 
@@ -111,11 +122,7 @@ function safeParseSetting<T>(value: string, fallback: T): T {
  * Root Layout Component
  * Wraps all pages with common layout elements and providers
  */
-export default function RootLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en" className={`${inter.variable} ${outfit.variable}`} suppressHydrationWarning>
             <head>
@@ -130,8 +137,11 @@ export default function RootLayout({
                 <meta name="theme-color" content="#facc15" />
 
                 {/* Viewport for mobile */}
-                <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-                
+                <meta
+                    name="viewport"
+                    content="width=device-width, initial-scale=1, maximum-scale=5"
+                />
+
                 {/* Prevent flash of wrong theme */}
                 <script
                     dangerouslySetInnerHTML={{
@@ -163,9 +173,7 @@ export default function RootLayout({
                 <Providers>
                     <MainNavbar />
                     {/* Main content */}
-                    <main className="relative">
-                        {children}
-                    </main>
+                    <main className="relative">{children}</main>
                 </Providers>
             </body>
         </html>

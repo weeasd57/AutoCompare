@@ -57,31 +57,29 @@ export default function EditVehiclePage() {
 
             try {
                 const res = await fetch(`/api/vehicles/${vehicleId}`);
-                if (!res.ok) {
-                    throw new Error('Failed to load vehicle');
-                }
-                const data: any = await res.json();
+                if (!res.ok) throw new Error('Failed to load vehicle');
 
-                const nextForm: EditFormState = {
+                const data = await res.json();
+                const mapField = (val: any, fallback: any = '') =>
+                    val != null ? String(val) : fallback;
+
+                setFormData({
                     make: data.make || '',
                     model: data.model || '',
                     year: data.year ?? new Date().getFullYear(),
                     trim: data.trim || '',
-                    base_price: data.base_price != null ? String(data.base_price) : '',
-                    horsepower: data.horsepower != null ? String(data.horsepower) : '',
-                    engine_cylinders: data.engine_cylinders != null ? String(data.engine_cylinders) : '',
-                    fuel_combined_mpg: data.fuel_combined_mpg != null ? String(data.fuel_combined_mpg) : '',
+                    base_price: mapField(data.base_price),
+                    horsepower: mapField(data.horsepower),
+                    engine_cylinders: mapField(data.engine_cylinders),
+                    fuel_combined_mpg: mapField(data.fuel_combined_mpg),
                     drivetrain: data.drivetrain || '',
-                    seating_capacity: data.seating_capacity != null ? String(data.seating_capacity) : '',
+                    seating_capacity: mapField(data.seating_capacity),
                     fuel_type: data.fuel_type || 'Gasoline',
                     body_style: data.body_style || 'Sedan',
                     country: data.country || 'USA',
                     image_url: '',
-                };
-
-                setFormData(nextForm);
+                });
             } catch (err) {
-                console.error(err);
                 setError(err instanceof Error ? err.message : 'Failed to load vehicle');
             } finally {
                 setLoading(false);
@@ -186,10 +184,12 @@ export default function EditVehiclePage() {
             const existingMatch = existingMakes.find(
                 (m) => m.toLowerCase() === normalizedMakeBase.toLowerCase()
             );
-            const finalMake = existingMatch || normalizedMakeBase
-                .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                .join(' ');
+            const finalMake =
+                existingMatch ||
+                normalizedMakeBase
+                    .split(' ')
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                    .join(' ');
 
             const res = await fetch(`/api/vehicles/${vehicleId}`, {
                 method: 'PUT',
@@ -201,10 +201,16 @@ export default function EditVehiclePage() {
                     trim: formData.trim,
                     base_price: formData.base_price ? Number(formData.base_price) : null,
                     horsepower: formData.horsepower ? Number(formData.horsepower) : null,
-                    engine_cylinders: formData.engine_cylinders ? Number(formData.engine_cylinders) : null,
-                    fuel_combined_mpg: formData.fuel_combined_mpg ? Number(formData.fuel_combined_mpg) : null,
+                    engine_cylinders: formData.engine_cylinders
+                        ? Number(formData.engine_cylinders)
+                        : null,
+                    fuel_combined_mpg: formData.fuel_combined_mpg
+                        ? Number(formData.fuel_combined_mpg)
+                        : null,
                     drivetrain: formData.drivetrain || null,
-                    seating_capacity: formData.seating_capacity ? Number(formData.seating_capacity) : null,
+                    seating_capacity: formData.seating_capacity
+                        ? Number(formData.seating_capacity)
+                        : null,
                     fuel_type: formData.fuel_type,
                     body_style: formData.body_style,
                     country: formData.country,
@@ -265,10 +271,17 @@ export default function EditVehiclePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Basic Info */}
                         <div className="space-y-4">
-                            <h3 className="font-bold border-b-2 border-gray-100 pb-2">Basic Info</h3>
+                            <h3 className="font-bold border-b-2 border-gray-100 pb-2">
+                                Basic Info
+                            </h3>
 
                             <div>
-                                <label htmlFor="make" className="block text-sm font-bold uppercase mb-1">Make</label>
+                                <label
+                                    htmlFor="make"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
+                                    Make
+                                </label>
                                 <input
                                     id="make"
                                     name="make"
@@ -279,7 +292,12 @@ export default function EditVehiclePage() {
                                 />
                             </div>
                             <div>
-                                <label htmlFor="model" className="block text-sm font-bold uppercase mb-1">Model</label>
+                                <label
+                                    htmlFor="model"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
+                                    Model
+                                </label>
                                 <input
                                     id="model"
                                     name="model"
@@ -291,7 +309,12 @@ export default function EditVehiclePage() {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="year" className="block text-sm font-bold uppercase mb-1">Year</label>
+                                    <label
+                                        htmlFor="year"
+                                        className="block text-sm font-bold uppercase mb-1"
+                                    >
+                                        Year
+                                    </label>
                                     <input
                                         id="year"
                                         type="number"
@@ -303,7 +326,12 @@ export default function EditVehiclePage() {
                                     />
                                 </div>
                                 <div>
-                                    <label htmlFor="trim" className="block text-sm font-bold uppercase mb-1">Trim</label>
+                                    <label
+                                        htmlFor="trim"
+                                        className="block text-sm font-bold uppercase mb-1"
+                                    >
+                                        Trim
+                                    </label>
                                     <input
                                         id="trim"
                                         name="trim"
@@ -317,10 +345,17 @@ export default function EditVehiclePage() {
 
                         {/* Specs */}
                         <div className="space-y-4">
-                            <h3 className="font-bold border-b-2 border-gray-100 pb-2">Specifications</h3>
+                            <h3 className="font-bold border-b-2 border-gray-100 pb-2">
+                                Specifications
+                            </h3>
 
                             <div>
-                                <label htmlFor="base_price" className="block text-sm font-bold uppercase mb-1">Price ($)</label>
+                                <label
+                                    htmlFor="base_price"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
+                                    Price ($)
+                                </label>
                                 <input
                                     id="base_price"
                                     type="number"
@@ -332,7 +367,12 @@ export default function EditVehiclePage() {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="horsepower" className="block text-sm font-bold uppercase mb-1">Horsepower</label>
+                                    <label
+                                        htmlFor="horsepower"
+                                        className="block text-sm font-bold uppercase mb-1"
+                                    >
+                                        Horsepower
+                                    </label>
                                     <input
                                         id="horsepower"
                                         type="number"
@@ -343,7 +383,12 @@ export default function EditVehiclePage() {
                                     />
                                 </div>
                                 <div>
-                                    <label htmlFor="engine_cylinders" className="block text-sm font-bold uppercase mb-1">Cylinders</label>
+                                    <label
+                                        htmlFor="engine_cylinders"
+                                        className="block text-sm font-bold uppercase mb-1"
+                                    >
+                                        Cylinders
+                                    </label>
                                     <input
                                         id="engine_cylinders"
                                         type="number"
@@ -356,7 +401,12 @@ export default function EditVehiclePage() {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="fuel_combined_mpg" className="block text-sm font-bold uppercase mb-1">Combined MPG</label>
+                                    <label
+                                        htmlFor="fuel_combined_mpg"
+                                        className="block text-sm font-bold uppercase mb-1"
+                                    >
+                                        Combined MPG
+                                    </label>
                                     <input
                                         id="fuel_combined_mpg"
                                         type="number"
@@ -367,7 +417,12 @@ export default function EditVehiclePage() {
                                     />
                                 </div>
                                 <div>
-                                    <label htmlFor="seating_capacity" className="block text-sm font-bold uppercase mb-1">Seats</label>
+                                    <label
+                                        htmlFor="seating_capacity"
+                                        className="block text-sm font-bold uppercase mb-1"
+                                    >
+                                        Seats
+                                    </label>
                                     <input
                                         id="seating_capacity"
                                         type="number"
@@ -379,7 +434,12 @@ export default function EditVehiclePage() {
                                 </div>
                             </div>
                             <div>
-                                <label htmlFor="drivetrain" className="block text-sm font-bold uppercase mb-1">Drivetrain</label>
+                                <label
+                                    htmlFor="drivetrain"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
+                                    Drivetrain
+                                </label>
                                 <select
                                     id="drivetrain"
                                     name="drivetrain"
@@ -395,7 +455,12 @@ export default function EditVehiclePage() {
                                 </select>
                             </div>
                             <div>
-                                <label htmlFor="image_url" className="block text-sm font-bold uppercase mb-1">Import Image URL(s)</label>
+                                <label
+                                    htmlFor="image_url"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
+                                    Import Image URL(s)
+                                </label>
                                 <input
                                     id="image_url"
                                     name="image_url"
@@ -406,7 +471,12 @@ export default function EditVehiclePage() {
                                 />
                             </div>
                             <div>
-                                <label htmlFor="image_files" className="block text-sm font-bold uppercase mb-1">Upload Images</label>
+                                <label
+                                    htmlFor="image_files"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
+                                    Upload Images
+                                </label>
                                 <input
                                     id="image_files"
                                     type="file"
@@ -435,7 +505,13 @@ export default function EditVehiclePage() {
                             disabled={saving}
                             className="w-full md:w-auto px-8 py-3 bg-blue-500 text-white font-black uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {saving ? 'Saving...' : <><Save className="w-5 h-5" /> Update Vehicle</>}
+                            {saving ? (
+                                'Saving...'
+                            ) : (
+                                <>
+                                    <Save className="w-5 h-5" /> Update Vehicle
+                                </>
+                            )}
                         </button>
                     </div>
                 </form>

@@ -30,19 +30,15 @@ const Toast = ({ id, message, type, onClose }: ToastProps) => {
     return (
         <div
             className={clsx(
-                "flex items-center gap-3 p-4 border-3 border-black min-w-[300px] max-w-md",
-                "shadow-[6px_6px_0px_0px_black] transform transition-all duration-300",
-                "animate-in slide-in-from-right-full fade-in",
+                'flex items-center gap-3 p-4 border-3 border-black min-w-[300px] max-w-md',
+                'shadow-[6px_6px_0px_0px_black] transform transition-all duration-300',
+                'animate-in slide-in-from-right-full fade-in',
                 colors[type]
             )}
         >
-            <div className="flex-shrink-0 bg-white border-2 border-black p-1">
-                {icons[type]}
-            </div>
+            <div className="flex-shrink-0 bg-white border-2 border-black p-1">{icons[type]}</div>
 
-            <p className="text-black font-black uppercase text-sm flex-grow">
-                {message}
-            </p>
+            <p className="text-black font-black uppercase text-sm flex-grow">{message}</p>
 
             <button
                 onClick={() => onClose(id)}
@@ -56,7 +52,7 @@ const Toast = ({ id, message, type, onClose }: ToastProps) => {
 
 export const ToastContainer = ({
     toasts,
-    onRemove
+    onRemove,
 }: {
     toasts: Array<{ id: string; message: string; type: ToastType }>;
     onRemove: (id: string) => void;

@@ -12,6 +12,33 @@ interface ImportResult {
     errors: string[];
 }
 
+const pInt = (v: string, def: number | null = null) => {
+    const p = parseInt(v);
+    return isNaN(p) ? def : p;
+};
+
+const pFloat = (v: string, def: number = 0) => {
+    const p = parseFloat(v);
+    return isNaN(p) ? def : p;
+};
+
+const mapRowToVehicle = (row: Record<string, string>) => ({
+    make: row.make || row.brand || '',
+    model: row.model || '',
+    year: pInt(row.year, new Date().getFullYear()) as number,
+    trim: row.trim || '',
+    base_price: pFloat(row.base_price || row.price),
+    horsepower: pInt(row.horsepower || row.hp),
+    engine_cylinders: pInt(row.engine_cylinders || row.cylinders),
+    fuel_combined_mpg: pInt(row.fuel_combined_mpg || row.mpg),
+    drivetrain: row.drivetrain || null,
+    seating_capacity: pInt(row.seating_capacity || row.seats),
+    fuel_type: row.fuel_type || 'Gasoline',
+    body_style: row.body_style || 'Sedan',
+    country: row.country || 'USA',
+    image_url: row.image_url || row.image || null,
+});
+
 export default function ImportPage() {
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -50,11 +77,11 @@ export default function ImportPage() {
         const reader = new FileReader();
         reader.onload = (event) => {
             const text = event.target?.result as string;
-            const lines = text.split('\n').filter(line => line.trim());
-            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            const lines = text.split('\n').filter((line) => line.trim());
+            const headers = lines[0].split(',').map((h) => h.trim().replace(/"/g, ''));
 
-            const data = lines.slice(1, 6).map(line => {
-                const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+            const data = lines.slice(1, 6).map((line) => {
+                const values = line.split(',').map((v) => v.trim().replace(/"/g, ''));
                 const obj: Record<string, string> = {};
                 headers.forEach((h, i) => {
                     obj[h] = values[i] || '';
@@ -75,41 +102,27 @@ export default function ImportPage() {
 
         try {
             const text = await file.text();
-            const lines = text.split('\n').filter(line => line.trim());
-            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, '').toLowerCase());
+            const lines = text.split('\n').filter((line) => line.trim());
+            const headers = lines[0]
+                .split(',')
+                .map((h) => h.trim().replace(/"/g, '').toLowerCase());
 
             let success = 0;
             let failed = 0;
-            const errors: string[] = [];
+            const importErrors: string[] = [];
 
             for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                const values = lines[i].split(',').map((v) => v.trim().replace(/"/g, ''));
                 const row: Record<string, string> = {};
                 headers.forEach((h, idx) => {
                     row[h] = values[idx] || '';
                 });
 
-                // Map CSV columns to API fields
-                const vehicleData = {
-                    make: row.make || row.brand || '',
-                    model: row.model || '',
-                    year: parseInt(row.year) || new Date().getFullYear(),
-                    trim: row.trim || '',
-                    base_price: parseFloat(row.base_price || row.price || '0') || 0,
-                    horsepower: parseInt(row.horsepower || row.hp || '0') || null,
-                    engine_cylinders: parseInt(row.engine_cylinders || row.cylinders || '0') || null,
-                    fuel_combined_mpg: parseInt(row.fuel_combined_mpg || row.mpg || '0') || null,
-                    drivetrain: row.drivetrain || null,
-                    seating_capacity: parseInt(row.seating_capacity || row.seats || '0') || null,
-                    fuel_type: row.fuel_type || 'Gasoline',
-                    body_style: row.body_style || 'Sedan',
-                    country: row.country || 'USA',
-                    image_url: row.image_url || row.image || null,
-                };
+                const vehicleData = mapRowToVehicle(row);
 
                 if (!vehicleData.make || !vehicleData.model) {
                     failed++;
-                    errors.push(`Row ${i}: Missing make or model`);
+                    importErrors.push(`Row ${i}: Missing make or model`);
                     continue;
                 }
 
@@ -119,21 +132,25 @@ export default function ImportPage() {
                         headers: { 'Content-Type': 'application/json', ...getAdminAuthHeaders() },
                         body: JSON.stringify(vehicleData),
                     });
-
-                    if (res.ok) {
-                        success++;
-                    } else {
+                    if (res.ok) success++;
+                    else {
                         failed++;
-                        errors.push(`Row ${i}: ${vehicleData.make} ${vehicleData.model} - API error`);
+                        importErrors.push(
+                            `Row ${i}: ${vehicleData.make} ${vehicleData.model} - API error`
+                        );
                     }
                 } catch (err) {
                     failed++;
-                    errors.push(`Row ${i}: ${vehicleData.make} ${vehicleData.model} - Network error`);
+                    console.error('Import API error', err);
+                    importErrors.push(
+                        `Row ${i}: ${vehicleData.make} ${vehicleData.model} - Network error`
+                    );
                 }
             }
 
-            setResult({ success, failed, errors: errors.slice(0, 10) });
+            setResult({ success, failed, errors: importErrors.slice(0, 10) });
         } catch (err) {
+            console.error('Failed to parse CSV file', err);
             setError('Failed to parse CSV file');
         } finally {
             setImporting(false);
@@ -164,7 +181,9 @@ export default function ImportPage() {
                             Your CSV file should have headers in the first row. Supported columns:
                         </p>
                         <code className="text-xs bg-blue-100 px-2 py-1 rounded block overflow-x-auto">
-                            make, model, year, trim, base_price, horsepower, engine_cylinders, fuel_combined_mpg, drivetrain, seating_capacity, fuel_type, body_style, country, image_url
+                            make, model, year, trim, base_price, horsepower, engine_cylinders,
+                            fuel_combined_mpg, drivetrain, seating_capacity, fuel_type, body_style,
+                            country, image_url
                         </code>
                     </div>
 
@@ -205,7 +224,9 @@ export default function ImportPage() {
                             </div>
                         ) : (
                             <>
-                                <p className="font-bold text-gray-600 mb-1">Click to upload CSV file</p>
+                                <p className="font-bold text-gray-600 mb-1">
+                                    Click to upload CSV file
+                                </p>
                                 <p className="text-sm text-gray-400">or drag and drop</p>
                             </>
                         )}
@@ -227,21 +248,31 @@ export default function ImportPage() {
                                 <table className="w-full text-sm">
                                     <thead>
                                         <tr className="bg-gray-100 border-b-2 border-black">
-                                            {Object.keys(preview[0]).slice(0, 6).map(key => (
-                                                <th key={key} className="p-2 text-left font-bold uppercase text-xs">
-                                                    {key}
-                                                </th>
-                                            ))}
+                                            {Object.keys(preview[0])
+                                                .slice(0, 6)
+                                                .map((key) => (
+                                                    <th
+                                                        key={key}
+                                                        className="p-2 text-left font-bold uppercase text-xs"
+                                                    >
+                                                        {key}
+                                                    </th>
+                                                ))}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {preview.map((row, i) => (
                                             <tr key={i} className="border-b border-gray-200">
-                                                {Object.values(row).slice(0, 6).map((val, j) => (
-                                                    <td key={j} className="p-2 truncate max-w-[150px]">
-                                                        {String(val)}
-                                                    </td>
-                                                ))}
+                                                {Object.values(row)
+                                                    .slice(0, 6)
+                                                    .map((val, j) => (
+                                                        <td
+                                                            key={j}
+                                                            className="p-2 truncate max-w-[150px]"
+                                                        >
+                                                            {String(val)}
+                                                        </td>
+                                                    ))}
                                             </tr>
                                         ))}
                                     </tbody>
@@ -279,7 +310,13 @@ export default function ImportPage() {
                         disabled={!file || importing}
                         className="w-full md:w-auto px-8 py-3 bg-green-500 text-white font-black uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {importing ? 'Importing...' : <><Upload className="w-5 h-5" /> Import Vehicles</>}
+                        {importing ? (
+                            'Importing...'
+                        ) : (
+                            <>
+                                <Upload className="w-5 h-5" /> Import Vehicles
+                            </>
+                        )}
                     </button>
                 </div>
             </div>

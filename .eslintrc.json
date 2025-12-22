@@ -1,13 +1,28 @@
 {
     "extends": [
         "next/core-web-vitals",
-        "plugin:jsx-a11y/recommended"
+        "plugin:jsx-a11y/recommended",
+        "plugin:sonarjs/recommended",
+        "prettier"
     ],
     "plugins": [
-        "security"
+        "security",
+        "unused-imports",
+        "prettier"
     ],
     "rules": {
+        "prettier/prettier": "error",
         "security/detect-object-injection": "off",
+        "unused-imports/no-unused-imports": "error",
+        "unused-imports/no-unused-vars": [
+            "warn",
+            {
+                "vars": "all",
+                "varsIgnorePattern": "^_",
+                "args": "after-used",
+                "argsIgnorePattern": "^_"
+            }
+        ],
         "jsx-a11y/anchor-is-valid": [
             "error",
             {

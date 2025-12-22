@@ -102,13 +102,17 @@ export default function AddVehicle() {
             const existingMatch = existingMakes.find(
                 (m) => m.toLowerCase() === normalizedMakeBase.toLowerCase()
             );
-            const finalMake = existingMatch || normalizedMakeBase
-                .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                .join(' ');
+            const finalMake =
+                existingMatch ||
+                normalizedMakeBase
+                    .split(' ')
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                    .join(' ');
 
             // 1. Generate ID (Slug)
-            const id = `${finalMake}-${formData.model}-${formData.year}`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            const id = `${finalMake}-${formData.model}-${formData.year}`
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-');
 
             // 2. Insert Record via API
             const res = await fetch('/api/vehicles', {
@@ -122,14 +126,18 @@ export default function AddVehicle() {
                     base_price: Number(formData.base_price) || 0,
                     horsepower: Number(formData.horsepower) || 0,
                     engine_cylinders: Number(formData.engine_cylinders) || 0,
-                    fuel_combined_mpg: formData.fuel_combined_mpg ? Number(formData.fuel_combined_mpg) : null,
+                    fuel_combined_mpg: formData.fuel_combined_mpg
+                        ? Number(formData.fuel_combined_mpg)
+                        : null,
                     drivetrain: formData.drivetrain || null,
-                    seating_capacity: formData.seating_capacity ? Number(formData.seating_capacity) : null,
+                    seating_capacity: formData.seating_capacity
+                        ? Number(formData.seating_capacity)
+                        : null,
                     fuel_type: formData.fuel_type,
                     body_style: formData.body_style,
                     country: formData.country,
-                    image_url: null
-                })
+                    image_url: null,
+                }),
             });
 
             const data = await res.json();
@@ -147,7 +155,6 @@ export default function AddVehicle() {
 
             // Success
             router.push('/admin/dashboard');
-
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to add vehicle');
             setLoading(false);
@@ -159,7 +166,10 @@ export default function AddVehicle() {
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
-                    <Link href="/admin/dashboard" className="p-2 border-2 border-black bg-white hover:bg-gray-100 transition-colors text-black">
+                    <Link
+                        href="/admin/dashboard"
+                        className="p-2 border-2 border-black bg-white hover:bg-gray-100 transition-colors text-black"
+                    >
                         <ChevronLeft className="w-5 h-5" />
                     </Link>
                     <h1 className="text-3xl font-black italic uppercase tracking-tighter text-black">
@@ -178,49 +188,146 @@ export default function AddVehicle() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Basic Info */}
                         <div className="space-y-4">
-                            <h3 className="font-bold border-b-2 border-gray-100 pb-2">Basic Info</h3>
+                            <h3 className="font-bold border-b-2 border-gray-100 pb-2">
+                                Basic Info
+                            </h3>
 
                             <div>
-                                <label htmlFor="make" className="block text-sm font-bold uppercase mb-1">Make</label>
-                                <input id="make" name="make" required value={formData.make} onChange={handleChange} className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none" placeholder="Ford" />
+                                <label
+                                    htmlFor="make"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
+                                    Make
+                                </label>
+                                <input
+                                    id="make"
+                                    name="make"
+                                    required
+                                    value={formData.make}
+                                    onChange={handleChange}
+                                    className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                    placeholder="Ford"
+                                />
                             </div>
                             <div>
-                                <label htmlFor="model" className="block text-sm font-bold uppercase mb-1">Model</label>
-                                <input id="model" name="model" required value={formData.model} onChange={handleChange} className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none" placeholder="F-150" />
+                                <label
+                                    htmlFor="model"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
+                                    Model
+                                </label>
+                                <input
+                                    id="model"
+                                    name="model"
+                                    required
+                                    value={formData.model}
+                                    onChange={handleChange}
+                                    className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                    placeholder="F-150"
+                                />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="year" className="block text-sm font-bold uppercase mb-1">Year</label>
-                                    <input id="year" type="number" name="year" required value={formData.year} onChange={handleChange} className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none" />
+                                    <label
+                                        htmlFor="year"
+                                        className="block text-sm font-bold uppercase mb-1"
+                                    >
+                                        Year
+                                    </label>
+                                    <input
+                                        id="year"
+                                        type="number"
+                                        name="year"
+                                        required
+                                        value={formData.year}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                    />
                                 </div>
                                 <div>
-                                    <label htmlFor="trim" className="block text-sm font-bold uppercase mb-1">Trim</label>
-                                    <input id="trim" name="trim" value={formData.trim} onChange={handleChange} className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none" placeholder="XLT" />
+                                    <label
+                                        htmlFor="trim"
+                                        className="block text-sm font-bold uppercase mb-1"
+                                    >
+                                        Trim
+                                    </label>
+                                    <input
+                                        id="trim"
+                                        name="trim"
+                                        value={formData.trim}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                        placeholder="XLT"
+                                    />
                                 </div>
                             </div>
                         </div>
 
                         {/* Specs */}
                         <div className="space-y-4">
-                            <h3 className="font-bold border-b-2 border-gray-100 pb-2">Specifications</h3>
+                            <h3 className="font-bold border-b-2 border-gray-100 pb-2">
+                                Specifications
+                            </h3>
 
                             <div>
-                                <label htmlFor="base_price" className="block text-sm font-bold uppercase mb-1">Price ($)</label>
-                                <input id="base_price" type="number" name="base_price" required value={formData.base_price} onChange={handleChange} className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none" />
+                                <label
+                                    htmlFor="base_price"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
+                                    Price ($)
+                                </label>
+                                <input
+                                    id="base_price"
+                                    type="number"
+                                    name="base_price"
+                                    required
+                                    value={formData.base_price}
+                                    onChange={handleChange}
+                                    className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="horsepower" className="block text-sm font-bold uppercase mb-1">Horsepower</label>
-                                    <input id="horsepower" type="number" name="horsepower" value={formData.horsepower} onChange={handleChange} className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none" />
+                                    <label
+                                        htmlFor="horsepower"
+                                        className="block text-sm font-bold uppercase mb-1"
+                                    >
+                                        Horsepower
+                                    </label>
+                                    <input
+                                        id="horsepower"
+                                        type="number"
+                                        name="horsepower"
+                                        value={formData.horsepower}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                    />
                                 </div>
                                 <div>
-                                    <label htmlFor="engine_cylinders" className="block text-sm font-bold uppercase mb-1">Cylinders</label>
-                                    <input id="engine_cylinders" type="number" name="engine_cylinders" value={formData.engine_cylinders} onChange={handleChange} className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none" />
+                                    <label
+                                        htmlFor="engine_cylinders"
+                                        className="block text-sm font-bold uppercase mb-1"
+                                    >
+                                        Cylinders
+                                    </label>
+                                    <input
+                                        id="engine_cylinders"
+                                        type="number"
+                                        name="engine_cylinders"
+                                        value={formData.engine_cylinders}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                    />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="fuel_combined_mpg" className="block text-sm font-bold uppercase mb-1">Combined MPG</label>
+                                    <label
+                                        htmlFor="fuel_combined_mpg"
+                                        className="block text-sm font-bold uppercase mb-1"
+                                    >
+                                        Combined MPG
+                                    </label>
                                     <input
                                         id="fuel_combined_mpg"
                                         type="number"
@@ -231,7 +338,12 @@ export default function AddVehicle() {
                                     />
                                 </div>
                                 <div>
-                                    <label htmlFor="seating_capacity" className="block text-sm font-bold uppercase mb-1">Seats</label>
+                                    <label
+                                        htmlFor="seating_capacity"
+                                        className="block text-sm font-bold uppercase mb-1"
+                                    >
+                                        Seats
+                                    </label>
                                     <input
                                         id="seating_capacity"
                                         type="number"
@@ -243,7 +355,12 @@ export default function AddVehicle() {
                                 </div>
                             </div>
                             <div>
-                                <label htmlFor="drivetrain" className="block text-sm font-bold uppercase mb-1">Drivetrain</label>
+                                <label
+                                    htmlFor="drivetrain"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
+                                    Drivetrain
+                                </label>
                                 <select
                                     id="drivetrain"
                                     name="drivetrain"
@@ -259,7 +376,12 @@ export default function AddVehicle() {
                                 </select>
                             </div>
                             <div>
-                                <label htmlFor="image_url" className="block text-sm font-bold uppercase mb-1">Import Image URL(s)</label>
+                                <label
+                                    htmlFor="image_url"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
+                                    Import Image URL(s)
+                                </label>
                                 <input
                                     id="image_url"
                                     name="image_url"
@@ -270,7 +392,12 @@ export default function AddVehicle() {
                                 />
                             </div>
                             <div>
-                                <label htmlFor="image_files" className="block text-sm font-bold uppercase mb-1">Upload Images</label>
+                                <label
+                                    htmlFor="image_files"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
+                                    Upload Images
+                                </label>
                                 <input
                                     id="image_files"
                                     type="file"
@@ -289,7 +416,13 @@ export default function AddVehicle() {
                             disabled={loading}
                             className="w-full md:w-auto px-8 py-3 bg-green-500 text-white font-black uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? 'Saving...' : <><Save className="w-5 h-5" /> Save Vehicle</>}
+                            {loading ? (
+                                'Saving...'
+                            ) : (
+                                <>
+                                    <Save className="w-5 h-5" /> Save Vehicle
+                                </>
+                            )}
                         </button>
                     </div>
                 </form>

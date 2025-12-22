@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, RefreshCw, Car, Plus } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Car } from 'lucide-react';
 import { VehicleCard } from '@/components/VehicleCard';
 import { ComparisonTable } from '@/components/ComparisonTable';
 import { InsightsPanel, QuickStats } from '@/components/InsightsPanel';
@@ -18,7 +18,6 @@ import { HistoryPanel } from '@/components/HistoryPanel';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { useCompareStore } from '@/store/compare-store';
 import { useHistoryStore } from '@/store/history-store';
-import { clsx } from 'clsx';
 import type { NormalizedSpec } from '@/types/vehicle';
 import { useSettings } from '@/context/SettingsContext';
 import { GoogleAdSlot } from '@/components/GoogleAdSlot';
@@ -113,11 +112,10 @@ export default function ComparePage() {
 
     // Determine overall winner for stats
     const wins: Record<string, number> = {};
-    const ties = comparison?.categories.filter(c => c.winner === 'tie').length || 0;
 
     if (comparison) {
-        comparison.vehicles.forEach(v => wins[v.id] = 0);
-        comparison.categories.forEach(c => {
+        comparison.vehicles.forEach((v) => (wins[v.id] = 0));
+        comparison.categories.forEach((c) => {
             if (c.winner && c.winner !== 'tie') {
                 wins[c.winner] = (wins[c.winner] || 0) + 1;
             }
@@ -149,7 +147,10 @@ export default function ComparePage() {
                     {/* Title */}
                     <div className="order-3 w-full md:order-2 md:w-auto flex justify-center">
                         <div className="flex items-center gap-2 px-4 py-2 bg-black text-white transform -skew-x-12">
-                            <Car className="w-5 h-5 transform skew-x-12" style={{ color: settings.primaryColor }} />
+                            <Car
+                                className="w-5 h-5 transform skew-x-12"
+                                style={{ color: settings.primaryColor }}
+                            />
                             <span className="font-black uppercase tracking-wider transform skew-x-12 text-sm sm:text-base md:text-sm lg:text-base">
                                 {settings.siteName}
                             </span>
@@ -183,7 +184,7 @@ export default function ComparePage() {
             <main className="max-w-7xl mx-auto px-4 py-8">
                 {/* Vehicle Cards Grid */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-                    {vehicles.map(vehicle => {
+                    {vehicles.map((vehicle) => {
                         const isWinner = comparison?.overallWinner === vehicle.id;
                         // Score calculation could be better connected, but omitted for brevity
                         return (
@@ -215,13 +216,7 @@ export default function ComparePage() {
                 )}
 
                 {/* Quick Stats */}
-                {comparison && (
-                    <QuickStats
-                        wins={wins}
-                        vehicles={vehicles}
-                        className="mb-8"
-                    />
-                )}
+                {comparison && <QuickStats wins={wins} vehicles={vehicles} className="mb-8" />}
 
                 {/* Visual Charts */}
                 {comparison && (
@@ -247,7 +242,11 @@ export default function ComparePage() {
                         {comparison && (
                             <InsightsPanel
                                 highlights={highlights}
-                                summary={comparison.overallWinner ? "Check out the key differences highlighted below." : undefined}
+                                summary={
+                                    comparison.overallWinner
+                                        ? 'Check out the key differences highlighted below.'
+                                        : undefined
+                                }
                             />
                         )}
                     </div>

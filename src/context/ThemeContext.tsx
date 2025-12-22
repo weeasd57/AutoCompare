@@ -30,7 +30,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     // Update document class and localStorage when theme changes
     useEffect(() => {
         if (!mounted) return;
-        
+
         const root = document.documentElement;
         if (theme === 'dark') {
             root.classList.add('dark');
@@ -41,7 +41,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }, [theme, mounted]);
 
     const toggleTheme = () => {
-        setThemeState(prev => prev === 'light' ? 'dark' : 'light');
+        setThemeState((prev) => (prev === 'light' ? 'dark' : 'light'));
     };
 
     const setTheme = (newTheme: Theme) => {

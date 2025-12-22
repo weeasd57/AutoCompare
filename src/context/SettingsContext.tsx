@@ -21,7 +21,8 @@ const defaultSettings: AppSettings = {
     siteName: 'AutoCompare',
     siteDescription: 'Compare vehicles side by side',
     seoTitle: 'AutoCompare - Smart Vehicle Comparison',
-    seoDescription: 'Compare vehicles side-by-side with smart insights. Find the perfect car by comparing specs, fuel economy, pricing, and more.',
+    seoDescription:
+        'Compare vehicles side-by-side with smart insights. Find the perfect car by comparing specs, fuel economy, pricing, and more.',
     seoKeywords: 'car comparison, vehicle specs, auto compare, car buying, vehicle comparison tool',
     primaryColor: '#facc15',
     enableComparison: true,
@@ -41,7 +42,7 @@ interface SettingsContextType {
 const SettingsContext = createContext<SettingsContextType>({
     settings: defaultSettings,
     loading: true,
-    refreshSettings: async () => { },
+    refreshSettings: async () => {},
 });
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
@@ -55,30 +56,30 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
             if (res.ok && Object.keys(data).length > 0) {
                 const newSettings = { ...defaultSettings };
+                const isTrue = (val: any) => [true, 'true', 1].includes(val);
 
-                // Map API response to settings object
-                if (data.siteName) newSettings.siteName = data.siteName;
-                if (data.siteDescription) newSettings.siteDescription = data.siteDescription;
-                if (data.seoTitle) newSettings.seoTitle = data.seoTitle;
-                if (data.seoDescription) newSettings.seoDescription = data.seoDescription;
-                if (data.seoKeywords) newSettings.seoKeywords = data.seoKeywords;
-                if (data.primaryColor) newSettings.primaryColor = data.primaryColor;
-                if (data.currency) newSettings.currency = data.currency;
-                if (data.homeHeroImageUrl) newSettings.homeHeroImageUrl = data.homeHeroImageUrl;
+                const simpleFields: Array<keyof AppSettings> = [
+                    'siteName',
+                    'siteDescription',
+                    'seoTitle',
+                    'seoDescription',
+                    'seoKeywords',
+                    'primaryColor',
+                    'currency',
+                    'homeHeroImageUrl',
+                ];
 
-                // Parse booleans/numbers safely
-                if (data.enableComparison !== undefined) {
-                    newSettings.enableComparison = [true, 'true', 1].includes(data.enableComparison);
-                }
-                if (data.showPrices !== undefined) {
-                    newSettings.showPrices = [true, 'true', 1].includes(data.showPrices);
-                }
-                if (data.enableExportShareButton !== undefined) {
-                    newSettings.enableExportShareButton = [true, 'true', 1].includes(data.enableExportShareButton);
-                }
-                if (data.maxCompareVehicles) {
+                simpleFields.forEach((field) => {
+                    if (data[field]) (newSettings as any)[field] = data[field];
+                });
+
+                if (data.enableComparison !== undefined)
+                    newSettings.enableComparison = isTrue(data.enableComparison);
+                if (data.showPrices !== undefined) newSettings.showPrices = isTrue(data.showPrices);
+                if (data.enableExportShareButton !== undefined)
+                    newSettings.enableExportShareButton = isTrue(data.enableExportShareButton);
+                if (data.maxCompareVehicles)
                     newSettings.maxCompareVehicles = Number(data.maxCompareVehicles);
-                }
 
                 setSettings(newSettings);
             }
@@ -108,7 +109,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         window.addEventListener('storage', onStorage);
 
         return () => {
-            window.removeEventListener('autocompare-settings-updated', onSettingsUpdated as EventListener);
+            window.removeEventListener(
+                'autocompare-settings-updated',
+                onSettingsUpdated as EventListener
+            );
             window.removeEventListener('storage', onStorage);
         };
     }, []);

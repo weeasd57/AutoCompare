@@ -13,6 +13,13 @@ import { clsx } from 'clsx';
 import { useSettings } from '@/context/SettingsContext';
 import { useToast } from '@/context/ToastContext';
 
+const BTN_CLASSES = {
+    shadow: 'shadow-[4px_4px_0px_0px_black]',
+    hover: 'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_black]',
+    active: 'active:translate-x-[2px] active:translate-y-[2px] active:shadow-none',
+    trans: 'transition-all duration-200',
+};
+
 interface ExportButtonProps {
     comparison: ComparisonResult;
     highlights: ComparisonHighlight[];
@@ -23,11 +30,7 @@ interface ExportButtonProps {
  * ExportButton Component
  * Handles PDF generation and sharing
  */
-export function ExportButton({
-    comparison,
-    highlights,
-    className,
-}: ExportButtonProps) {
+export function ExportButton({ comparison, highlights, className }: ExportButtonProps) {
     const [isExporting, setIsExporting] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [showShareMenu, setShowShareMenu] = useState(false);
@@ -65,7 +68,7 @@ export function ExportButton({
                     text: shareText,
                 });
                 return;
-            } catch (err) {
+            } catch {
                 // User cancelled or share failed
             }
         }
@@ -75,8 +78,8 @@ export function ExportButton({
             await navigator.clipboard.writeText(shareText);
             setShowShareMenu(false);
             toast.success('Comparison copied to clipboard!');
-        } catch (err) {
-            console.error('Failed to copy:', err);
+        } catch {
+            console.error('Failed to copy');
         }
     };
 
@@ -89,11 +92,11 @@ export function ExportButton({
                 className={clsx(
                     'flex items-center gap-2 px-6 py-3 border-2 border-black',
                     'text-black font-black uppercase text-sm',
-                    'shadow-[4px_4px_0px_0px_black]',
-                    'transition-all duration-200',
+                    BTN_CLASSES.shadow,
+                    BTN_CLASSES.trans,
                     'disabled:opacity-50 disabled:cursor-not-allowed',
-                    'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_black]',
-                    'active:translate-x-[2px] active:translate-y-[2px] active:shadow-none'
+                    BTN_CLASSES.hover,
+                    BTN_CLASSES.active
                 )}
                 style={{ backgroundColor: settings.primaryColor }}
             >
@@ -123,10 +126,10 @@ export function ExportButton({
                             'flex items-center gap-2 px-4 py-3 border-2 border-black',
                             'bg-white hover:bg-gray-100',
                             'text-black font-bold uppercase',
-                            'shadow-[4px_4px_0px_0px_black]',
-                            'transition-all duration-200',
-                            'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_black]',
-                            'active:translate-x-[2px] active:translate-y-[2px] active:shadow-none'
+                            BTN_CLASSES.shadow,
+                            BTN_CLASSES.trans,
+                            BTN_CLASSES.hover,
+                            BTN_CLASSES.active
                         )}
                     >
                         <Share2 className="w-5 h-5" />
@@ -134,12 +137,14 @@ export function ExportButton({
                     </button>
 
                     {showShareMenu && (
-                        <div className={clsx(
-                            'absolute right-0 top-full mt-2',
-                            'w-48 p-0 border-2 border-black bg-white',
-                            'shadow-[4px_4px_0px_0px_black]',
-                            'z-50'
-                        )}>
+                        <div
+                            className={clsx(
+                                'absolute right-0 top-full mt-2',
+                                'w-48 p-0 border-2 border-black bg-white',
+                                'shadow-[4px_4px_0px_0px_black]',
+                                'z-50'
+                            )}
+                        >
                             <button
                                 onClick={handleShare}
                                 className={clsx(
@@ -162,10 +167,7 @@ export function ExportButton({
 /**
  * Compact export button for mobile
  */
-export function ExportButtonCompact({
-    comparison,
-    highlights,
-}: ExportButtonProps) {
+export function ExportButtonCompact({ comparison, highlights }: ExportButtonProps) {
     const [isExporting, setIsExporting] = useState(false);
     const { settings } = useSettings();
 

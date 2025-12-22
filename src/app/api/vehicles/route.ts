@@ -93,13 +93,13 @@ export async function POST(request: Request) {
             fuel_combined_mpg,
             drivetrain,
             seating_capacity,
-            image_url
+            image_url,
         } = body;
 
         // Generate ID
         const id = `${make}-${model}-${year}`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
-        const result = await query<any>(
+        await query<any>(
             `INSERT INTO vehicles (
                 id, make, model, year, trim, base_price, horsepower,
                 engine_cylinders, fuel_type, body_style, country,

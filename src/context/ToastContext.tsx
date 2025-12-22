@@ -27,15 +27,18 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, []);
 
-    const showToast = useCallback((message: string, type: ToastType) => {
-        const id = Math.random().toString(36).substring(2, 9);
-        setToasts((prev) => [...prev, { id, message, type }]);
+    const showToast = useCallback(
+        (message: string, type: ToastType) => {
+            const id = Math.random().toString(36).substring(2, 9);
+            setToasts((prev) => [...prev, { id, message, type }]);
 
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            removeToast(id);
-        }, 5000);
-    }, [removeToast]);
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                removeToast(id);
+            }, 5000);
+        },
+        [removeToast]
+    );
 
     const success = (message: string) => showToast(message, 'success');
     const error = (message: string) => showToast(message, 'error');

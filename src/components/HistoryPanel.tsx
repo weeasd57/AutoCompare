@@ -50,9 +50,9 @@ export function HistoryPanel({ className }: HistoryPanelProps) {
         setMounted(true);
     }, []);
 
-    const handleLoadComparison = (vehicles: typeof history[0]['vehicles']) => {
+    const handleLoadComparison = (vehicles: (typeof history)[0]['vehicles']) => {
         clearVehicles();
-        vehicles.forEach(v => addVehicle(v));
+        vehicles.forEach((v) => addVehicle(v));
         router.push('/compare');
         setIsOpen(false);
     };
@@ -103,7 +103,9 @@ export function HistoryPanel({ className }: HistoryPanelProps) {
                         tabIndex={0}
                         className="fixed inset-0 z-40"
                         onClick={() => setIsOpen(false)}
-                        onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false); }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Escape') setIsOpen(false);
+                        }}
                         aria-label="Close panel"
                     />
 
@@ -133,7 +135,9 @@ export function HistoryPanel({ className }: HistoryPanelProps) {
                                 <div className="p-8 text-center text-gray-500">
                                     <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                                     <p className="font-bold">No history yet</p>
-                                    <p className="text-sm mt-1">Your recent comparisons will appear here</p>
+                                    <p className="text-sm mt-1">
+                                        Your recent comparisons will appear here
+                                    </p>
                                 </div>
                             ) : (
                                 <ul>
@@ -144,7 +148,9 @@ export function HistoryPanel({ className }: HistoryPanelProps) {
                                         >
                                             <div className="flex-1 min-w-0">
                                                 <p className="font-bold text-sm truncate">
-                                                    {entry.vehicles.map(v => `${v.make} ${v.model}`).join(' vs ')}
+                                                    {entry.vehicles
+                                                        .map((v) => `${v.make} ${v.model}`)
+                                                        .join(' vs ')}
                                                 </p>
                                                 <p className="text-xs text-gray-500 flex items-center gap-1">
                                                     <Clock className="w-3 h-3" />
@@ -153,7 +159,9 @@ export function HistoryPanel({ className }: HistoryPanelProps) {
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <button
-                                                    onClick={() => handleLoadComparison(entry.vehicles)}
+                                                    onClick={() =>
+                                                        handleLoadComparison(entry.vehicles)
+                                                    }
                                                     className="p-1.5 bg-green-500 border border-black text-white hover:bg-green-600"
                                                     title="Load this comparison"
                                                 >

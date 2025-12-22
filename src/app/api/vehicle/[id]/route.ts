@@ -11,6 +11,11 @@ import type { NormalizedSpec } from '@/types/vehicle';
  * Sample vehicle data for demo purposes
  * In production, this would come from VPIC VIN decode or additional APIs
  */
+const USA = 'USA';
+const MEX = 'Mexico';
+const FORD = 'Ford Motor Company';
+const TOYOTA = 'Toyota Motor Corporation';
+
 const SAMPLE_VEHICLES: Record<string, Partial<NormalizedSpec>> = {
     'ford-maverick-2025': {
         id: 'ford-maverick-2025',
@@ -41,8 +46,8 @@ const SAMPLE_VEHICLES: Record<string, Partial<NormalizedSpec>> = {
         abs: true,
         esc: true,
         basePrice: 28995,
-        country: 'Mexico',
-        manufacturer: 'Ford Motor Company',
+        country: MEX,
+        manufacturer: FORD,
     },
     'ford-maverick-hybrid-2025': {
         id: 'ford-maverick-hybrid-2025',
@@ -73,8 +78,8 @@ const SAMPLE_VEHICLES: Record<string, Partial<NormalizedSpec>> = {
         abs: true,
         esc: true,
         basePrice: 25515,
-        country: 'Mexico',
-        manufacturer: 'Ford Motor Company',
+        country: MEX,
+        manufacturer: FORD,
     },
     'toyota-tacoma-2025': {
         id: 'toyota-tacoma-2025',
@@ -106,7 +111,7 @@ const SAMPLE_VEHICLES: Record<string, Partial<NormalizedSpec>> = {
         esc: true,
         basePrice: 35880,
         country: 'Japan',
-        manufacturer: 'Toyota Motor Corporation',
+        manufacturer: TOYOTA,
     },
     'honda-civic-2024': {
         id: 'honda-civic-2024',
@@ -137,7 +142,7 @@ const SAMPLE_VEHICLES: Record<string, Partial<NormalizedSpec>> = {
         abs: true,
         esc: true,
         basePrice: 25845,
-        country: 'USA',
+        country: USA,
         manufacturer: 'Honda Motor Co.',
     },
     'toyota-camry-2024': {
@@ -169,8 +174,8 @@ const SAMPLE_VEHICLES: Record<string, Partial<NormalizedSpec>> = {
         abs: true,
         esc: true,
         basePrice: 28400,
-        country: 'USA',
-        manufacturer: 'Toyota Motor Corporation',
+        country: USA,
+        manufacturer: TOYOTA,
     },
     'ford-f-150-2024': {
         id: 'ford-f-150-2024',
@@ -201,8 +206,8 @@ const SAMPLE_VEHICLES: Record<string, Partial<NormalizedSpec>> = {
         abs: true,
         esc: true,
         basePrice: 44970,
-        country: 'USA',
-        manufacturer: 'Ford Motor Company',
+        country: USA,
+        manufacturer: FORD,
     },
     'chevrolet-silverado-2024': {
         id: 'chevrolet-silverado-2024',
@@ -233,7 +238,7 @@ const SAMPLE_VEHICLES: Record<string, Partial<NormalizedSpec>> = {
         abs: true,
         esc: true,
         basePrice: 48200,
-        country: 'USA',
+        country: USA,
         manufacturer: 'General Motors',
     },
     'tesla-model-3-2024': {
@@ -248,9 +253,9 @@ const SAMPLE_VEHICLES: Record<string, Partial<NormalizedSpec>> = {
         engineCylinders: null,
         engineConfiguration: 'Dual Motor Electric',
         fuelType: 'Electric',
-        fuelCityMpg: 134, // MPGe
-        fuelHighwayMpg: 126, // MPGe
-        fuelCombinedMpg: 130, // MPGe
+        fuelCityMpg: 134,
+        fuelHighwayMpg: 126,
+        fuelCombinedMpg: 130,
         transmission: 'Single Speed',
         transmissionSpeeds: 1,
         drivetrain: 'AWD',
@@ -265,7 +270,7 @@ const SAMPLE_VEHICLES: Record<string, Partial<NormalizedSpec>> = {
         abs: true,
         esc: true,
         basePrice: 42990,
-        country: 'USA',
+        country: USA,
         manufacturer: 'Tesla Inc.',
     },
 };
@@ -274,64 +279,54 @@ const SAMPLE_VEHICLES: Record<string, Partial<NormalizedSpec>> = {
  * GET /api/vehicle/[id]
  * Get normalized specs for a specific vehicle
  */
-export async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
+async function tryDecodeVin(id: string) {
+    if (id.length === 17 && /^[A-HJ-NPR-Z0-9]+$/i.test(id)) {
+        try {
+            const specs = await decodeVIN(id.toUpperCase());
+            if (specs) return NextResponse.json({ specs, source: 'vpic-vin' });
+        } catch (error) {
+            console.error('VIN decode failed:', error);
+        }
+    }
+    return null;
+}
+
+async function trySearchVehicle(normalizedId: string) {
+    const parts = normalizedId.split('-');
+    if (parts.length >= 3) {
+        const year = parseInt(parts[parts.length - 1], 10);
+        const make = parts[0];
+        const model = parts.slice(1, -1).join(' ');
+        if (!isNaN(year) && year >= 1981 && year <= 2030) {
+            const specs = await searchVehicle(make, model, year);
+            if (specs) return NextResponse.json({ specs, source: 'vpic-search' });
+        }
+    }
+    return null;
+}
+
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
+        if (!id) return NextResponse.json({ error: 'Vehicle ID is required' }, { status: 400 });
 
-        if (!id) {
-            return NextResponse.json(
-                { error: 'Vehicle ID is required' },
-                { status: 400 }
-            );
-        }
+        const vinResponse = await tryDecodeVin(id);
+        if (vinResponse) return vinResponse;
 
-        // Normalize the ID
         const normalizedId = id.toLowerCase().replace(/\s+/g, '-');
-
-        // Check if it's a VIN (17 characters)
-        if (id.length === 17 && /^[A-HJ-NPR-Z0-9]+$/i.test(id)) {
-            try {
-                const specs = await decodeVIN(id.toUpperCase());
-                return NextResponse.json({ specs, source: 'vpic-vin' });
-            } catch (error) {
-                console.error('VIN decode failed:', error);
-            }
-        }
-
-        // Check sample vehicles first
         if (SAMPLE_VEHICLES[normalizedId]) {
-            const specs = SAMPLE_VEHICLES[normalizedId] as NormalizedSpec;
-            return NextResponse.json({ specs, source: 'sample-data' });
+            return NextResponse.json({
+                specs: SAMPLE_VEHICLES[normalizedId],
+                source: 'sample-data',
+            });
         }
 
-        // Try to parse make-model-year from ID
-        const parts = normalizedId.split('-');
-        if (parts.length >= 3) {
-            const year = parseInt(parts[parts.length - 1], 10);
-            const make = parts[0];
-            const model = parts.slice(1, -1).join(' ');
+        const searchResponse = await trySearchVehicle(normalizedId);
+        if (searchResponse) return searchResponse;
 
-            if (!isNaN(year) && year >= 1981 && year <= 2030) {
-                const specs = await searchVehicle(make, model, year);
-                if (specs) {
-                    return NextResponse.json({ specs, source: 'vpic-search' });
-                }
-            }
-        }
-
-        return NextResponse.json(
-            { error: 'Vehicle not found', id: normalizedId },
-            { status: 404 }
-        );
-
+        return NextResponse.json({ error: 'Vehicle not found', id: normalizedId }, { status: 404 });
     } catch (error) {
         console.error('Vehicle API error:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch vehicle data' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to fetch vehicle data' }, { status: 500 });
     }
 }

@@ -136,67 +136,63 @@ const COMPARISON_CATEGORIES: CategoryDefinition[] = [
 /**
  * Compare vehicles and generate detailed comparison
  */
-export function compareVehicles(
-    vehicles: NormalizedSpec[]
-): ComparisonResult {
+export function compareVehicles(vehicles: NormalizedSpec[]): ComparisonResult {
     const categories: ComparisonCategory[] = [];
     const wins: Record<string, number> = {};
 
     // Initialize wins
-    vehicles.forEach(v => wins[v.id] = 0);
+    vehicles.forEach((v) => (wins[v.id] = 0));
 
     for (const category of COMPARISON_CATEGORIES) {
         const values: Record<string, string | number | null> = {};
 
-        vehicles.forEach(v => {
+        vehicles.forEach((v) => {
             values[v.id] = v[category.key] as string | number | null;
         });
 
-        // Determine winner for this category
-        let winner: string | 'tie' | null = null;
-        let bestValue: number | null = null;
-        let tiedVehicles: string[] = [];
+        const findCategoryWinner = () => {
+            const validVehicles = vehicles.filter((v) => {
+                const val = values[v.id];
+                return (
+                    val !== null &&
+                    val !== undefined &&
+                    !isNaN(typeof val === 'number' ? val : parseFloat(String(val)))
+                );
+            });
 
-        // Filter out nulls and get valid numbers for comparison
-        const validVehicles = vehicles.filter(v => {
-            const val = values[v.id];
-            return val !== null && val !== undefined && !isNaN(typeof val === 'number' ? val : parseFloat(String(val)));
-        });
+            if (validVehicles.length === 0) return { winner: null, bestValue: null };
 
-        if (validVehicles.length > 0) {
-            validVehicles.forEach(v => {
+            let bestValue: number | null = null;
+            let tiedVehicles: string[] = [];
+
+            validVehicles.forEach((v) => {
                 const rawVal = values[v.id];
                 const numVal = typeof rawVal === 'number' ? rawVal : parseFloat(String(rawVal));
 
                 if (bestValue === null) {
                     bestValue = numVal;
                     tiedVehicles = [v.id];
+                } else if (category.higherIsBetter) {
+                    if (numVal > bestValue) {
+                        bestValue = numVal;
+                        tiedVehicles = [v.id];
+                    } else if (numVal === bestValue) tiedVehicles.push(v.id);
                 } else {
-                    if (category.higherIsBetter) {
-                        if (numVal > bestValue) {
-                            bestValue = numVal;
-                            tiedVehicles = [v.id];
-                        } else if (numVal === bestValue) {
-                            tiedVehicles.push(v.id);
-                        }
-                    } else { // Lower is better
-                        if (numVal < bestValue) {
-                            bestValue = numVal;
-                            tiedVehicles = [v.id];
-                        } else if (numVal === bestValue) {
-                            tiedVehicles.push(v.id);
-                        }
-                    }
+                    if (numVal < bestValue) {
+                        bestValue = numVal;
+                        tiedVehicles = [v.id];
+                    } else if (numVal === bestValue) tiedVehicles.push(v.id);
                 }
             });
 
             if (tiedVehicles.length === 1) {
-                winner = tiedVehicles[0];
-                wins[winner]++;
-            } else if (tiedVehicles.length > 1) {
-                winner = 'tie';
+                wins[tiedVehicles[0]]++;
+                return { winner: tiedVehicles[0], bestValue };
             }
-        }
+            return { winner: tiedVehicles.length > 1 ? 'tie' : null, bestValue };
+        };
+
+        const { winner } = findCategoryWinner();
 
         categories.push({
             name: category.name,
@@ -267,7 +263,7 @@ export function generateHighlights(
         if (!catDef) continue;
 
         const winnerId = category.winner as string;
-        const winnerVehicle = vehicles.find(v => v.id === winnerId);
+        const winnerVehicle = vehicles.find((v) => v.id === winnerId);
 
         if (!winnerVehicle) continue;
 
@@ -278,29 +274,17 @@ export function generateHighlights(
         const formatVal = (val: string | number | null) => {
             if (val === null) return 'N/A';
             if (catDef.formatValue) return catDef.formatValue(val);
-            return `${val}${catDef.unit ? ` ${catDef.unit}` : ''}`;
+            const unitPart = catDef.unit ? ' ' + catDef.unit : '';
+            return String(val) + unitPart;
         };
 
         // Generate natural language message
-        let message = '';
-
-        if (category.name === 'Base Price') {
-            message = `${winnerName} is the most affordable at ${formatVal(winnerValue)}`;
-        } else if (category.name.includes('MPG')) {
-            message = `${winnerName} leads in fuel economy with ${formatVal(winnerValue)}`;
-        } else if (category.name === 'Horsepower') {
-            message = `${winnerName} is the most powerful with ${formatVal(winnerValue)}`;
-        } else if (category.name === 'Torque') {
-            message = `${winnerName} delivers the most torque: ${formatVal(winnerValue)}`;
-        } else if (category.name === 'Towing Capacity') {
-            message = `${winnerName} has the highest towing capacity: ${formatVal(winnerValue)}`;
-        } else if (category.name === 'Seating') {
-            message = `${winnerName} fits the most passengers (${formatVal(winnerValue)})`;
-        } else {
-            // Generic message
-            const comparison = catDef.higherIsBetter ? 'highest' : 'best';
-            message = `${winnerName} has the ${comparison} ${category.name.toLowerCase()}: ${formatVal(winnerValue)}`;
-        }
+        const message = generateHighlightMessage(
+            category.name,
+            winnerName,
+            formatVal(winnerValue),
+            catDef.higherIsBetter
+        );
 
         highlights.push({
             id: `highlight-${category.name.toLowerCase().replace(/\s+/g, '-')}`,
@@ -315,6 +299,36 @@ export function generateHighlights(
     return highlights;
 }
 
+function generateHighlightMessage(
+    categoryName: string,
+    winnerName: string,
+    formattedValue: string,
+    higherIsBetter: boolean
+): string {
+    if (categoryName === 'Base Price') {
+        return `${winnerName} is the most affordable at ${formattedValue}`;
+    }
+    if (categoryName.includes('MPG')) {
+        return `${winnerName} leads in fuel economy with ${formattedValue}`;
+    }
+    if (categoryName === 'Horsepower') {
+        return `${winnerName} is the most powerful with ${formattedValue}`;
+    }
+    if (categoryName === 'Torque') {
+        return `${winnerName} delivers the most torque: ${formattedValue}`;
+    }
+    if (categoryName === 'Towing Capacity') {
+        return `${winnerName} has the highest towing capacity: ${formattedValue}`;
+    }
+    if (categoryName === 'Seating') {
+        return `${winnerName} fits the most passengers (${formattedValue})`;
+    }
+
+    // Generic message
+    const comparisonStyle = higherIsBetter ? 'highest' : 'best';
+    return `${winnerName} has the ${comparisonStyle} ${categoryName.toLowerCase()}: ${formattedValue}`;
+}
+
 /**
  * Get a summary sentence for the overall comparison
  */
@@ -325,16 +339,16 @@ export function getComparisonSummary(comparison: ComparisonResult): string {
 
     // Count wins per vehicle
     const wins: Record<string, number> = {};
-    vehicles.forEach(v => wins[v.id] = 0);
+    vehicles.forEach((v) => (wins[v.id] = 0));
 
-    categories.forEach(c => {
+    categories.forEach((c) => {
         if (c.winner && c.winner !== 'tie') {
             wins[c.winner]++;
         }
     });
 
     if (overallWinner && overallWinner !== 'tie') {
-        const winnerVehicle = vehicles.find(v => v.id === overallWinner);
+        const winnerVehicle = vehicles.find((v) => v.id === overallWinner);
         if (winnerVehicle) {
             const name = `${winnerVehicle.make} ${winnerVehicle.model}`;
             return `${name} leads the comparison, winning in ${wins[overallWinner]} out of ${categories.length} categories.`;
@@ -357,7 +371,7 @@ export function calculateComparisonScores(comparison: ComparisonResult): Record<
     const importanceWeight = { high: 3, medium: 2, low: 1 };
 
     // Initialize
-    comparison.vehicles.forEach(v => {
+    comparison.vehicles.forEach((v) => {
         scores[v.id] = 0;
         points[v.id] = 0;
     });
@@ -374,17 +388,17 @@ export function calculateComparisonScores(comparison: ComparisonResult): Record<
         } else if (category.winner === 'tie') {
             // Find which vehicles tied
             // In a real generic implementation we'd need to know exactly which ones tied
-            // For now, we assume if it's a tie, all valid ones get points? 
+            // For now, we assume if it's a tie, all valid ones get points?
             // Better strategy: Recalculate or store tied IDs in category.
             // Simplified: If tie, no one gets full points, or split points.
             // Let's iterate values again to be safe/precise or simplify.
-            // PREVIOUS LOGIC: split points between A and B. 
+            // PREVIOUS LOGIC: split points between A and B.
             // NEW LOGIC: simpler, just give half points to everyone for now or 0.
             // Let's just give 0 for a tie to emphasize clear wins, or improve later.
         }
     }
 
-    comparison.vehicles.forEach(v => {
+    comparison.vehicles.forEach((v) => {
         scores[v.id] = totalPossible > 0 ? Math.round((points[v.id] / totalPossible) * 100) : 50;
     });
 

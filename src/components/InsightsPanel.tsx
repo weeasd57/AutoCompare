@@ -5,7 +5,7 @@
 
 'use client';
 
-import { Sparkles, TrendingUp, Trophy } from 'lucide-react';
+import { Sparkles, Trophy } from 'lucide-react';
 import { ComparisonHighlight, NormalizedSpec } from '@/types/vehicle';
 import { clsx } from 'clsx';
 import { useSettings } from '@/context/SettingsContext';
@@ -17,38 +17,17 @@ interface InsightsPanelProps {
 }
 
 /**
- * Get color classes based on importance
- */
-function getImportanceColors(importance: 'high' | 'medium' | 'low') {
-    switch (importance) {
-        case 'high':
-            return 'from-primary-500/20 to-primary-600/10 border-primary-500/30';
-        case 'medium':
-            return 'from-amber-500/20 to-amber-600/10 border-amber-500/30';
-        case 'low':
-            return 'from-gray-500/20 to-gray-600/10 border-gray-500/30';
-    }
-}
-
-/**
  * InsightsPanel Component
  * Shows key insights from the comparison
  */
-export function InsightsPanel({
-    highlights,
-    summary,
-    className,
-}: InsightsPanelProps) {
+export function InsightsPanel({ highlights, summary, className }: InsightsPanelProps) {
     const { settings } = useSettings();
     if (highlights.length === 0) {
         return null;
     }
 
     return (
-        <div className={clsx(
-            'neo-card',
-            className
-        )}>
+        <div className={clsx('neo-card', className)}>
             {/* Header */}
             <div
                 className="px-6 py-4 border-b-2 border-black"
@@ -126,7 +105,6 @@ export function InsightsPanel({
  * Shows winner summary at a glance
  */
 
-
 export function QuickStats({
     wins,
     className,
@@ -158,13 +136,14 @@ export function QuickStats({
             <div className="flex flex-wrap gap-4 items-center justify-center">
                 {Object.entries(wins).map(([id, count]) => {
                     // Find actual vehicle object to get proper name
-                    const vehicle = vehicles.find(v => v.id === id);
-                    const name = vehicle
-                        ? `${vehicle.make} ${vehicle.model} ${vehicle.year}`
-                        : id; // Fallback to ID if not found (shouldn't happen)
+                    const vehicle = vehicles.find((v) => v.id === id);
+                    const name = vehicle ? `${vehicle.make} ${vehicle.model} ${vehicle.year}` : id; // Fallback to ID if not found (shouldn't happen)
 
                     return (
-                        <div key={id} className="text-center px-6 py-3 bg-white border-2 border-black shadow-[4px_4px_0px_0px_black]">
+                        <div
+                            key={id}
+                            className="text-center px-6 py-3 bg-white border-2 border-black shadow-[4px_4px_0px_0px_black]"
+                        >
                             <p className="text-3xl font-black text-black">{count}</p>
                             <p className="text-xs font-bold uppercase text-gray-600">{name}</p>
                         </div>

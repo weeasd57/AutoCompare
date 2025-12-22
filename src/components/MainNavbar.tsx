@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Car, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useSettings } from '@/context/SettingsContext';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -42,7 +42,7 @@ export function MainNavbar() {
                 <div className="flex items-center gap-3">
                     {/* Desktop links */}
                     <div className="hidden sm:flex items-center gap-2 text-xs sm:text-sm font-black uppercase">
-                        {NAV_LINKS.map(link => {
+                        {NAV_LINKS.map((link) => {
                             const isActive = pathname === link.href;
                             return (
                                 <Link
@@ -53,7 +53,14 @@ export function MainNavbar() {
                                         'dark:bg-gray-900 dark:text-white dark:border-white dark:hover:bg-gray-800 dark:shadow-[2px_2px_0px_0px_white]',
                                         isActive && 'border-black dark:border-black'
                                     )}
-                                    style={isActive ? { backgroundColor: settings.primaryColor, color: '#000' } : undefined}
+                                    style={
+                                        isActive
+                                            ? {
+                                                  backgroundColor: settings.primaryColor,
+                                                  color: '#000',
+                                              }
+                                            : undefined
+                                    }
                                 >
                                     {link.label}
                                 </Link>
@@ -65,7 +72,7 @@ export function MainNavbar() {
                     <button
                         type="button"
                         className="sm:hidden inline-flex items-center justify-center w-9 h-9 border-2 border-black dark:border-white bg-white dark:bg-gray-900 text-black dark:text-white shadow-[2px_2px_0px_0px_black] dark:shadow-[2px_2px_0px_0px_white]"
-                        onClick={() => setMobileOpen(prev => !prev)}
+                        onClick={() => setMobileOpen((prev) => !prev)}
                         aria-label="Toggle navigation menu"
                     >
                         <Menu className="w-4 h-4" />
@@ -76,7 +83,7 @@ export function MainNavbar() {
             {mobileOpen && (
                 <div className="sm:hidden border-t-2 border-black dark:border-white bg-white dark:bg-gray-900">
                     <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-2 text-xs font-black uppercase">
-                        {NAV_LINKS.map(link => {
+                        {NAV_LINKS.map((link) => {
                             const isActive = pathname === link.href;
                             return (
                                 <Link
@@ -87,7 +94,14 @@ export function MainNavbar() {
                                         'dark:bg-gray-900 dark:text-white dark:border-white dark:hover:bg-gray-800 dark:shadow-[2px_2px_0px_0px_white]',
                                         isActive && 'border-black dark:border-black'
                                     )}
-                                    style={isActive ? { backgroundColor: settings.primaryColor, color: '#000' } : undefined}
+                                    style={
+                                        isActive
+                                            ? {
+                                                  backgroundColor: settings.primaryColor,
+                                                  color: '#000',
+                                              }
+                                            : undefined
+                                    }
                                     onClick={() => setMobileOpen(false)}
                                 >
                                     {link.label}

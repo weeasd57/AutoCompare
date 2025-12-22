@@ -5,7 +5,7 @@
 
 'use client';
 
-import { CheckCircle, XCircle, Minus } from 'lucide-react';
+import { CheckCircle, Minus } from 'lucide-react';
 import { ComparisonResult, ComparisonCategory } from '@/types/vehicle';
 import { clsx } from 'clsx';
 import { useSettings } from '@/context/SettingsContext';
@@ -38,19 +38,18 @@ export function ComparisonTable({ comparison, className }: ComparisonTableProps)
     const { settings } = useSettings();
 
     // Group categories by type
-    const performanceCategories = categories.filter(c =>
+    const performanceCategories = categories.filter((c) =>
         ['Horsepower', 'Torque', 'Engine Size'].includes(c.name)
     );
-    const fuelCategories = categories.filter(c =>
-        c.name.includes('MPG')
-    );
-    const capacityCategories = categories.filter(c =>
+    const fuelCategories = categories.filter((c) => c.name.includes('MPG'));
+    const capacityCategories = categories.filter((c) =>
         ['Seating', 'Towing Capacity', 'Payload'].includes(c.name)
     );
-    const otherCategories = categories.filter(c =>
-        !performanceCategories.includes(c) &&
-        !fuelCategories.includes(c) &&
-        !capacityCategories.includes(c)
+    const otherCategories = categories.filter(
+        (c) =>
+            !performanceCategories.includes(c) &&
+            !fuelCategories.includes(c) &&
+            !capacityCategories.includes(c)
     );
 
     const renderCategoryGroup = (title: string, items: ComparisonCategory[]) => {
@@ -77,25 +76,46 @@ export function ComparisonTable({ comparison, className }: ComparisonTableProps)
                         >
                             {/* Category name */}
                             <div className="flex items-center gap-2 min-w-0">
-                                <span className="text-lg flex-shrink-0 text-black">{category.icon}</span>
-                                <span className="text-black font-bold uppercase text-xs truncate">{category.name}</span>
+                                <span className="text-lg flex-shrink-0 text-black">
+                                    {category.icon}
+                                </span>
+                                <span className="text-black font-bold uppercase text-xs truncate">
+                                    {category.name}
+                                </span>
                             </div>
 
                             {/* Vehicle Values */}
-                            {vehicles.map(vehicle => {
+                            {vehicles.map((vehicle) => {
                                 const isWinner = category.winner === vehicle.id;
                                 const isTie = category.winner === 'tie';
                                 const val = category.values[vehicle.id];
 
                                 return (
-                                    <div key={vehicle.id} className={clsx(
-                                        'flex items-center justify-end gap-2',
-                                        isWinner && 'text-green-600 font-bold',
-                                        (category.winner === null || isTie) && 'text-gray-400',
-                                        !isWinner && !isTie && category.winner && 'text-gray-500'
-                                    )}>
-                                        <WinnerIndicator winner={category.winner === vehicle.id ? vehicle.id : (isTie ? 'tie' : null)} side={vehicle.id} />
-                                        <span className="truncate font-mono font-medium">{formatValue(val, category.unit)}</span>
+                                    <div
+                                        key={vehicle.id}
+                                        className={clsx(
+                                            'flex items-center justify-end gap-2',
+                                            isWinner && 'text-green-600 font-bold',
+                                            (category.winner === null || isTie) && 'text-gray-400',
+                                            !isWinner &&
+                                                !isTie &&
+                                                category.winner &&
+                                                'text-gray-500'
+                                        )}
+                                    >
+                                        <WinnerIndicator
+                                            winner={
+                                                category.winner === vehicle.id
+                                                    ? vehicle.id
+                                                    : isTie
+                                                      ? 'tie'
+                                                      : null
+                                            }
+                                            side={vehicle.id}
+                                        />
+                                        <span className="truncate font-mono font-medium">
+                                            {formatValue(val, category.unit)}
+                                        </span>
                                     </div>
                                 );
                             })}
@@ -107,23 +127,29 @@ export function ComparisonTable({ comparison, className }: ComparisonTableProps)
     };
 
     return (
-        <div className={clsx(
-            'neo-card overflow-hidden', // Neo card wrapper
-            'overflow-x-auto',
-            className
-        )}>
+        <div
+            className={clsx(
+                'neo-card overflow-hidden', // Neo card wrapper
+                'overflow-x-auto',
+                className
+            )}
+        >
             <div className="min-w-fit">
                 {/* Header */}
                 <div
                     className="grid gap-4 px-4 py-4 border-b-2 border-black"
                     style={{
                         gridTemplateColumns: `1fr repeat(${vehicles.length}, 120px)`,
-                        backgroundColor: settings.primaryColor
+                        backgroundColor: settings.primaryColor,
                     }}
                 >
                     <div className="text-sm font-black uppercase text-black">Specification</div>
-                    {vehicles.map(vehicle => (
-                        <div key={vehicle.id} className="text-sm font-black text-black text-right truncate" title={`${vehicle.make} ${vehicle.model}`}>
+                    {vehicles.map((vehicle) => (
+                        <div
+                            key={vehicle.id}
+                            className="text-sm font-black text-black text-right truncate"
+                            title={`${vehicle.make} ${vehicle.model}`}
+                        >
                             {vehicle.make} {vehicle.model}
                         </div>
                     ))}

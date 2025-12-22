@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Search, X, Loader2, Car } from 'lucide-react';
 import { useVehicles } from '@/context/VehicleContext';
 import type { VehicleSuggestion } from '@/types/vehicle';
@@ -76,14 +76,17 @@ export function SearchAutocomplete({
         // Use local search - no API calls!
         const results = searchVehicles(debouncedQuery, 8);
         // Transform NormalizedSpec to VehicleSuggestion
-        const suggestions: VehicleSuggestion[] = results.map(vehicle => ({
-            id: vehicle.id,
-            displayName: `${vehicle.make} ${vehicle.model} ${vehicle.year}${vehicle.trim ? ` ${vehicle.trim}` : ''}`,
-            make: vehicle.make,
-            model: vehicle.model,
-            year: vehicle.year,
-            trim: vehicle.trim ?? undefined,
-        }));
+        const suggestions: VehicleSuggestion[] = results.map((vehicle) => {
+            const trimPart = vehicle.trim ? ` ${vehicle.trim}` : '';
+            return {
+                id: vehicle.id,
+                displayName: `${vehicle.make} ${vehicle.model} ${vehicle.year}${trimPart}`,
+                make: vehicle.make,
+                model: vehicle.model,
+                year: vehicle.year,
+                trim: vehicle.trim ?? undefined,
+            };
+        });
         setSuggestions(suggestions);
     }, [debouncedQuery, searchVehicles, isLoaded]);
 
@@ -116,9 +119,7 @@ export function SearchAutocomplete({
         switch (e.key) {
             case 'ArrowDown':
                 e.preventDefault();
-                setSelectedIndex((prev) =>
-                    prev < suggestions.length - 1 ? prev + 1 : prev
-                );
+                setSelectedIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : prev));
                 break;
 
             case 'ArrowUp':
@@ -173,9 +174,7 @@ export function SearchAutocomplete({
         <div className={clsx('relative w-full', className)}>
             {/* Label */}
             {label && (
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                    {label}
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">{label}</label>
             )}
 
             {/* Input container */}
@@ -272,11 +271,13 @@ export function SearchAutocomplete({
                                         aria-selected={selectedIndex === index}
                                     >
                                         {/* Vehicle icon */}
-                                        <div className={clsx(
-                                            'w-10 h-10 rounded-lg flex items-center justify-center',
-                                            'bg-gradient-to-br from-primary-500/20 to-primary-600/10',
-                                            'border border-primary-500/20'
-                                        )}>
+                                        <div
+                                            className={clsx(
+                                                'w-10 h-10 rounded-lg flex items-center justify-center',
+                                                'bg-gradient-to-br from-primary-500/20 to-primary-600/10',
+                                                'border border-primary-500/20'
+                                            )}
+                                        >
                                             <Car className="w-5 h-5 text-primary-400" />
                                         </div>
 
@@ -291,11 +292,12 @@ export function SearchAutocomplete({
                                         </div>
 
                                         {/* Match score indicator */}
-                                        {suggestion.score !== undefined && suggestion.score < 0.3 && (
-                                            <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400">
-                                                Best Match
-                                            </span>
-                                        )}
+                                        {suggestion.score !== undefined &&
+                                            suggestion.score < 0.3 && (
+                                                <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400">
+                                                    Best Match
+                                                </span>
+                                            )}
                                     </button>
                                 </li>
                             ))}

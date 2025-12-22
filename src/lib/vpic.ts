@@ -4,12 +4,7 @@
 // Docs: https://vpic.nhtsa.dot.gov/api/
 // ============================================
 
-import type {
-    VehicleMake,
-    VehicleModel,
-    VPICResponse,
-    NormalizedSpec
-} from '@/types/vehicle';
+import type { VehicleMake, VehicleModel, VPICResponse, NormalizedSpec } from '@/types/vehicle';
 
 // Base URL for NHTSA VPIC API
 const VPIC_BASE_URL = 'https://vpic.nhtsa.dot.gov/api/vehicles';
@@ -23,7 +18,7 @@ async function vpicFetch<T>(endpoint: string): Promise<T> {
     try {
         const response = await fetch(url, {
             headers: {
-                'Accept': 'application/json',
+                Accept: 'application/json',
             },
             // Cache for 1 hour to reduce API calls
             next: { revalidate: 3600 },
@@ -58,9 +53,7 @@ export async function getAllMakes(): Promise<VehicleMake[]> {
  */
 export async function getModelsForMake(make: string): Promise<VehicleModel[]> {
     const encodedMake = encodeURIComponent(make);
-    const data = await vpicFetch<VPICResponse>(
-        `/GetModelsForMake/${encodedMake}?format=json`
-    );
+    const data = await vpicFetch<VPICResponse>(`/GetModelsForMake/${encodedMake}?format=json`);
 
     return data.Results.map((result) => ({
         makeId: result.Make_ID as number,
@@ -73,10 +66,7 @@ export async function getModelsForMake(make: string): Promise<VehicleModel[]> {
 /**
  * Get models for a make and specific year
  */
-export async function getModelsForMakeYear(
-    make: string,
-    year: number
-): Promise<VehicleModel[]> {
+export async function getModelsForMakeYear(make: string, year: number): Promise<VehicleModel[]> {
     const encodedMake = encodeURIComponent(make);
     const data = await vpicFetch<VPICResponse>(
         `/GetModelsForMakeYear/make/${encodedMake}/modelyear/${year}?format=json`
@@ -94,9 +84,7 @@ export async function getModelsForMakeYear(
  * Decode a VIN to get vehicle specifications
  */
 export async function decodeVIN(vin: string): Promise<NormalizedSpec> {
-    const data = await vpicFetch<VPICResponse>(
-        `/DecodeVinValues/${vin}?format=json`
-    );
+    const data = await vpicFetch<VPICResponse>(`/DecodeVinValues/${vin}?format=json`);
 
     if (data.Results.length === 0) {
         throw new Error('No results found for VIN');
@@ -109,9 +97,7 @@ export async function decodeVIN(vin: string): Promise<NormalizedSpec> {
  * Decode VIN with extended data (includes more fields)
  */
 export async function decodeVINExtended(vin: string): Promise<NormalizedSpec> {
-    const data = await vpicFetch<VPICResponse>(
-        `/DecodeVinValuesExtended/${vin}?format=json`
-    );
+    const data = await vpicFetch<VPICResponse>(`/DecodeVinValuesExtended/${vin}?format=json`);
 
     if (data.Results.length === 0) {
         throw new Error('No results found for VIN');
@@ -244,9 +230,7 @@ export async function searchVehicle(
         // Use decode with partial VIN approach or model lookup
         // For now, we'll create a synthetic spec based on available data
         const models = await getModelsForMakeYear(make, year);
-        const matchedModel = models.find(
-            (m) => m.modelName.toLowerCase() === model.toLowerCase()
-        );
+        const matchedModel = models.find((m) => m.modelName.toLowerCase() === model.toLowerCase());
 
         if (!matchedModel) {
             return null;

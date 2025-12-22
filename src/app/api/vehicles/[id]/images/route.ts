@@ -8,11 +8,10 @@ const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const MAX_IMAGES_PER_VEHICLE = 5;
 
 async function assertVehicleExists(vehicleId: string) {
-    const rows = await query<{ id: string }>('SELECT id FROM vehicles WHERE id = ? LIMIT 1', [vehicleId]);
-    if (!Array.isArray(rows) || rows.length === 0) {
-        return false;
-    }
-    return true;
+    const rows = await query<{ id: string }>('SELECT id FROM vehicles WHERE id = ? LIMIT 1', [
+        vehicleId,
+    ]);
+    return Array.isArray(rows) && rows.length > 0;
 }
 
 async function syncVehicleImageUrl(vehicleId: string) {
@@ -82,10 +81,7 @@ async function findFirstAvailableSortOrder(vehicleId: string): Promise<number | 
     return null;
 }
 
-export async function GET(
-    request: Request,
-    { params }: { params: { id: string } }
-) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
     try {
         const vehicleId = params.id;
 
@@ -111,92 +107,82 @@ export async function GET(
     }
 }
 
-export async function POST(
-    request: Request,
-    { params }: { params: { id: string } }
-) {
+async function parseFormData(request: Request) {
+    const formData = await request.formData();
+    const file = formData.get('file');
+    const sortOrderRaw = formData.get('sortOrder');
+    let sortOrder;
+
+    if (sortOrderRaw !== null && sortOrderRaw !== undefined && String(sortOrderRaw).trim() !== '') {
+        const parsed = Number(sortOrderRaw);
+        if (Number.isFinite(parsed) && parsed >= 0) sortOrder = parsed;
+    }
+
+    if (!file || !(file instanceof File) || !file.type.startsWith('image/')) return null;
+
+    return { buffer: Buffer.from(await file.arrayBuffer()), mimeType: file.type, sortOrder };
+}
+
+async function parseJsonBody(request: Request) {
+    const body = await request.json();
+    const sourceUrl = body?.sourceUrl;
+    const sortOrderRaw = body?.sortOrder;
+    let sortOrder;
+
+    if (sortOrderRaw !== undefined) {
+        const parsed = Number(sortOrderRaw);
+        if (Number.isFinite(parsed) && parsed >= 0) sortOrder = parsed;
+    }
+
+    if (!sourceUrl || typeof sourceUrl !== 'string') return null;
+
+    try {
+        const downloaded = await readImageFromUrl(sourceUrl);
+        return { ...downloaded, sortOrder };
+    } catch {
+        return null;
+    }
+}
+
+async function validateSortOrder(vehicleId: string, sortOrder?: number) {
+    if (sortOrder === undefined) {
+        const available = await findFirstAvailableSortOrder(vehicleId);
+        if (available === null) return { error: `Max ${MAX_IMAGES_PER_VEHICLE} images` };
+        return { sortOrder: available };
+    }
+    if (sortOrder >= MAX_IMAGES_PER_VEHICLE) {
+        return { error: `sortOrder must be < ${MAX_IMAGES_PER_VEHICLE}` };
+    }
+    return { sortOrder };
+}
+
+export async function POST(request: Request, { params }: { params: { id: string } }) {
     const guard = requireAdminWriteAccess(request);
     if (guard) return guard;
 
     try {
         const vehicleId = params.id;
-
-        const exists = await assertVehicleExists(vehicleId);
-        if (!exists) {
+        if (!(await assertVehicleExists(vehicleId)))
             return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
-        }
 
-        const contentType = request.headers.get('content-type') || '';
+        const isMultipart = (request.headers.get('content-type') || '').includes(
+            'multipart/form-data'
+        );
+        const parsed = isMultipart ? await parseFormData(request) : await parseJsonBody(request);
 
-        let sortOrder: number | undefined;
-        let buffer: Buffer;
-        let mimeType: string;
-
-        if (contentType.includes('multipart/form-data')) {
-            const formData = await request.formData();
-            const file = formData.get('file');
-            const sortOrderRaw = formData.get('sortOrder');
-
-            if (sortOrderRaw !== null && sortOrderRaw !== undefined && String(sortOrderRaw).trim() !== '') {
-                const parsed = Number(sortOrderRaw);
-                if (!Number.isFinite(parsed) || parsed < 0) {
-                    return NextResponse.json({ error: 'Invalid sortOrder' }, { status: 400 });
-                }
-                sortOrder = parsed;
-            }
-
-            if (!file || !(file instanceof File)) {
-                return NextResponse.json({ error: 'Missing image file' }, { status: 400 });
-            }
-
-            if (!file.type.startsWith('image/')) {
-                return NextResponse.json({ error: 'Only image files are allowed' }, { status: 400 });
-            }
-
-            const bytes = await file.arrayBuffer();
-            buffer = Buffer.from(bytes);
-            mimeType = file.type;
-        } else {
-            const body = await request.json();
-            const sourceUrl = body?.sourceUrl;
-            const sortOrderRaw = body?.sortOrder;
-
-            if (sortOrderRaw !== undefined) {
-                const parsed = Number(sortOrderRaw);
-                if (!Number.isFinite(parsed) || parsed < 0) {
-                    return NextResponse.json({ error: 'Invalid sortOrder' }, { status: 400 });
-                }
-                sortOrder = parsed;
-            }
-
-            if (!sourceUrl || typeof sourceUrl !== 'string') {
-                return NextResponse.json({ error: 'Missing sourceUrl' }, { status: 400 });
-            }
-
-            const downloaded = await readImageFromUrl(sourceUrl);
-            buffer = downloaded.buffer;
-            mimeType = downloaded.mimeType;
-        }
-
-        if (buffer.length > MAX_IMAGE_BYTES) {
-            return NextResponse.json({ error: 'Image is too large' }, { status: 413 });
-        }
-
-        if (sortOrder === undefined) {
-            const slot = await findFirstAvailableSortOrder(vehicleId);
-            if (slot === null) {
-                return NextResponse.json(
-                    { error: `Max ${MAX_IMAGES_PER_VEHICLE} images per vehicle` },
-                    { status: 400 }
-                );
-            }
-            sortOrder = slot;
-        } else if (sortOrder >= MAX_IMAGES_PER_VEHICLE) {
+        if (!parsed)
             return NextResponse.json(
-                { error: `sortOrder must be < ${MAX_IMAGES_PER_VEHICLE}` },
+                { error: 'Invalid request or failed to get image' },
                 { status: 400 }
             );
-        }
+
+        const { buffer, mimeType } = parsed;
+        if (buffer.length > MAX_IMAGE_BYTES)
+            return NextResponse.json({ error: 'Image too large' }, { status: 413 });
+
+        const validated = await validateSortOrder(vehicleId, parsed.sortOrder);
+        if (validated.error) return NextResponse.json({ error: validated.error }, { status: 400 });
+        const sortOrder = validated.sortOrder!;
 
         await query(
             `INSERT INTO vehicle_images (vehicle_id, sort_order, mime_type, image_data)
@@ -219,7 +205,9 @@ export async function POST(
         return NextResponse.json({
             success: true,
             imageId,
-            url: imageId ? `/api/vehicles/${encodeURIComponent(vehicleId)}/images/${imageId}` : null,
+            url: imageId
+                ? `/api/vehicles/${encodeURIComponent(vehicleId)}/images/${imageId}`
+                : null,
             imageUrlList,
         });
     } catch (error: any) {
@@ -231,10 +219,7 @@ export async function POST(
     }
 }
 
-export async function DELETE(
-    request: Request,
-    { params }: { params: { id: string } }
-) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
     const guard = requireAdminWriteAccess(request);
     if (guard) return guard;
 

@@ -21,7 +21,7 @@ export default function AdminLogin() {
             const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email, password }),
             });
 
             const data = await res.json();
@@ -41,6 +41,7 @@ export default function AdminLogin() {
             localStorage.setItem('admin_token', data.token);
             router.push('/admin/dashboard');
         } catch (err) {
+            console.error('Login request failed', err);
             setError('Network error');
             setLoading(false);
         }
@@ -60,9 +61,7 @@ export default function AdminLogin() {
                     <h1 className="text-3xl font-black italic uppercase tracking-tighter mb-2 text-black">
                         Admin Access
                     </h1>
-                    <p className="text-gray-500 font-medium">
-                        Log in to manage your vehicle fleet
-                    </p>
+                    <p className="text-gray-500 font-medium">Log in to manage your vehicle fleet</p>
                 </div>
 
                 {/* Card */}
@@ -77,7 +76,12 @@ export default function AdminLogin() {
                     <form onSubmit={handleLogin} className="space-y-6">
                         {/* Email */}
                         <div>
-                            <label htmlFor="email" className="block text-sm font-bold uppercase mb-2">Email</label>
+                            <label
+                                htmlFor="email"
+                                className="block text-sm font-bold uppercase mb-2"
+                            >
+                                Email
+                            </label>
                             <div className="relative">
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                                     <User className="w-5 h-5" />
@@ -96,7 +100,12 @@ export default function AdminLogin() {
 
                         {/* Password */}
                         <div>
-                            <label htmlFor="password" className="block text-sm font-bold uppercase mb-2">Password</label>
+                            <label
+                                htmlFor="password"
+                                className="block text-sm font-bold uppercase mb-2"
+                            >
+                                Password
+                            </label>
                             <div className="relative">
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                                     <Lock className="w-5 h-5" />
@@ -126,14 +135,16 @@ export default function AdminLogin() {
                                 type="submit"
                                 disabled={loading}
                                 className={clsx(
-                                    "w-full py-4 text-black font-black uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center",
-                                    loading ? "bg-gray-100 cursor-not-allowed" : "bg-yellow-400 hover:bg-yellow-500"
+                                    'w-full py-4 text-black font-black uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center',
+                                    loading
+                                        ? 'bg-gray-100 cursor-not-allowed'
+                                        : 'bg-yellow-400 hover:bg-yellow-500'
                                 )}
                             >
                                 {loading ? (
                                     <span className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
                                 ) : (
-                                    "Sign In"
+                                    'Sign In'
                                 )}
                             </button>
                         </div>

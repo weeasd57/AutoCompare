@@ -9,80 +9,84 @@
 
 /* Root variables - Light Mode */
 :root {
-  --primary: #2563eb;    /* Vibrant Blue */
-  --secondary: #facc15;  /* Bright Yellow */
-  --danger: #dc2626;     /* Red */
-  --success: #16a34a;    /* Green */
-  --bg-primary: #fdfbf7; /* Off-white paper look */
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #e2e8f0;
-  
-  --text-primary: #000000;
-  --text-secondary: #334155;
-  
-  --border-color: #000000;
-  --shadow-offset: 4px;
+    --primary: #2563eb; /* Vibrant Blue */
+    --secondary: #facc15; /* Bright Yellow */
+    --danger: #dc2626; /* Red */
+    --success: #16a34a; /* Green */
+    --bg-primary: #fdfbf7; /* Off-white paper look */
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #e2e8f0;
+
+    --text-primary: #000000;
+    --text-secondary: #334155;
+
+    --border-color: #000000;
+    --shadow-offset: 4px;
 }
 
 /* Dark Mode variables */
 .dark {
-  --primary: #3b82f6;    /* Lighter Blue for dark mode */
-  --secondary: #fbbf24;  /* Bright Yellow */
-  --danger: #ef4444;     /* Lighter Red */
-  --success: #22c55e;    /* Lighter Green */
-  --bg-primary: #0f172a; /* Dark blue-gray */
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
-  
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  
-  --border-color: #e2e8f0;
-  --shadow-offset: 4px;
+    --primary: #3b82f6; /* Lighter Blue for dark mode */
+    --secondary: #fbbf24; /* Bright Yellow */
+    --danger: #ef4444; /* Lighter Red */
+    --success: #22c55e; /* Lighter Green */
+    --bg-primary: #0f172a; /* Dark blue-gray */
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+
+    --border-color: #e2e8f0;
+    --shadow-offset: 4px;
 }
 
 /* Base styles */
 html {
-  scroll-behavior: smooth;
+    scroll-behavior: smooth;
 }
 
 body {
-  font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  min-height: 100vh;
+    font-family:
+        'Space Grotesk',
+        system-ui,
+        -apple-system,
+        sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
 }
 
 /* Form controls - respect theme colors in both light and dark modes */
 input,
 select,
 textarea {
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: var(--text-secondary);
+    color: var(--text-secondary);
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 12px;
+    width: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary);
-  border-left: 2px solid var(--border-color);
+    background: var(--bg-primary);
+    border-left: 2px solid var(--border-color);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border: 2px solid var(--bg-primary);
+    background: var(--border-color);
+    border: 2px solid var(--bg-primary);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--primary);
+    background: var(--primary);
 }
 
 /* ============================================
@@ -91,151 +95,156 @@ textarea::placeholder {
 
 /* Neo Card */
 .neo-card {
-  background: var(--bg-secondary);
-  border: 3px solid var(--border-color);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px var(--border-color);
-  transition: all 0.2s ease-in-out;
+    background: var(--bg-secondary);
+    border: 3px solid var(--border-color);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px var(--border-color);
+    transition: all 0.2s ease-in-out;
 }
 
 .neo-card:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px 0px var(--border-color);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px 0px var(--border-color);
 }
 
 .neo-card:active {
-  transform: translate(2px, 2px);
-  box-shadow: 0px 0px 0px 0px var(--border-color);
+    transform: translate(2px, 2px);
+    box-shadow: 0px 0px 0px 0px var(--border-color);
 }
 
 /* Neo Input */
 .neo-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background: var(--bg-secondary);
-  border: 3px solid var(--border-color);
-  color: var(--text-primary);
-  font-weight: 500;
-  transition: all 0.2s ease;
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px rgba(0,0,0,0.1);
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    border: 3px solid var(--border-color);
+    color: var(--text-primary);
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px rgba(0, 0, 0, 0.1);
 }
 
 .neo-input:focus {
-  outline: none;
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px var(--border-color);
-  transform: translate(-2px, -2px);
+    outline: none;
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px var(--border-color);
+    transform: translate(-2px, -2px);
 }
 
 .dark .neo-input {
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px rgba(255,255,255,0.1);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px rgba(255, 255, 255, 0.1);
 }
 
 /* Neo Button */
 .btn-primary {
-  @apply px-6 py-3 font-bold text-white uppercase tracking-wider;
-  background: var(--primary);
-  border: 3px solid var(--border-color);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px var(--border-color);
-  transition: all 0.1s ease;
+    @apply px-6 py-3 font-bold text-white uppercase tracking-wider;
+    background: var(--primary);
+    border: 3px solid var(--border-color);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px var(--border-color);
+    transition: all 0.1s ease;
 }
 
 .btn-primary:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px 0px var(--border-color);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px 0px var(--border-color);
 }
 
 .btn-primary:active {
-  transform: translate(2px, 2px);
-  box-shadow: 0px 0px 0px 0px var(--border-color);
+    transform: translate(2px, 2px);
+    box-shadow: 0px 0px 0px 0px var(--border-color);
 }
 
 .btn-secondary {
-  @apply px-6 py-3 font-bold uppercase tracking-wider;
-  background: var(--secondary);
-  color: #000000;
-  border: 3px solid var(--border-color);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px var(--border-color);
-  transition: all 0.1s ease;
+    @apply px-6 py-3 font-bold uppercase tracking-wider;
+    background: var(--secondary);
+    color: #000000;
+    border: 3px solid var(--border-color);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px var(--border-color);
+    transition: all 0.1s ease;
 }
 
 .btn-secondary:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px 0px var(--border-color);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px 0px var(--border-color);
 }
 
 .btn-secondary:active {
-  transform: translate(2px, 2px);
-  box-shadow: 0px 0px 0px 0px var(--border-color);
+    transform: translate(2px, 2px);
+    box-shadow: 0px 0px 0px 0px var(--border-color);
 }
 
 /* Typography Overrides */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
 }
 
 /* Grid Pattern for Background */
 .bg-neo-grid {
-  background-color: var(--bg-primary);
-  background-size: 40px 40px;
-  background-image:
-    linear-gradient(to right, rgba(0,0,0,0.1) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0,0,0,0.1) 1px, transparent 1px);
+    background-color: var(--bg-primary);
+    background-size: 40px 40px;
+    background-image:
+        linear-gradient(to right, rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
 }
 
 .dark .bg-neo-grid {
-  background-image:
-    linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
 }
 
 /* Badge/Tag Styles */
 .neo-tag {
-  @apply px-2 py-1 text-xs font-bold uppercase;
-  border: 2px solid var(--border-color);
-  box-shadow: 2px 2px 0px 0px var(--border-color);
+    @apply px-2 py-1 text-xs font-bold uppercase;
+    border: 2px solid var(--border-color);
+    box-shadow: 2px 2px 0px 0px var(--border-color);
 }
 
 /* Dark mode text utilities */
 .dark .text-black {
-  color: var(--text-primary);
+    color: var(--text-primary);
 }
 
 .dark .text-gray-600 {
-  color: var(--text-secondary);
+    color: var(--text-secondary);
 }
 
 .dark .bg-white {
-  background-color: var(--bg-secondary);
+    background-color: var(--bg-secondary);
 }
 
 .dark .bg-yellow-50 {
-  background-color: var(--bg-tertiary);
+    background-color: var(--bg-tertiary);
 }
 
 .dark .border-black {
-  border-color: var(--border-color);
+    border-color: var(--border-color);
 }
 
 .dark .bg-gray-50 {
-  background-color: #0f172a;
+    background-color: #0f172a;
 }
 
 .dark .bg-gray-100 {
-  background-color: #111827;
+    background-color: #111827;
 }
 
 .dark .bg-gray-200 {
-  background-color: #1f2937;
+    background-color: #1f2937;
 }
 
 .dark .text-gray-500,
 .dark .text-gray-400,
 .dark .text-gray-300 {
-  color: var(--text-secondary);
+    color: var(--text-secondary);
 }
 
 .dark .border-gray-200,
 .dark .border-gray-300 {
-  border-color: var(--border-color);
+    border-color: var(--border-color);
 }

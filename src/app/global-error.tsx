@@ -22,7 +22,9 @@ export default function GlobalError({
                         <AlertCircle className="w-10 h-10 text-red-600" />
                     </div>
 
-                    <h2 className="text-3xl font-black mb-4 uppercase text-black">Something went wrong!</h2>
+                    <h2 className="text-3xl font-black mb-4 uppercase text-black">
+                        Something went wrong!
+                    </h2>
                     <p className="text-lg text-gray-700 mb-8 font-medium">
                         A critical error occurred. Please try refreshing the page.
                     </p>

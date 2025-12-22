@@ -36,7 +36,7 @@ export const useFavoritesStore = create<FavoritesStore>()(
                 const { favorites } = get();
 
                 // Prevent duplicates
-                if (favorites.some(v => v.id === vehicle.id)) {
+                if (favorites.some((v) => v.id === vehicle.id)) {
                     return;
                 }
 
@@ -48,7 +48,7 @@ export const useFavoritesStore = create<FavoritesStore>()(
              */
             removeFavorite: (vehicleId) => {
                 const { favorites } = get();
-                set({ favorites: favorites.filter(v => v.id !== vehicleId) });
+                set({ favorites: favorites.filter((v) => v.id !== vehicleId) });
             },
 
             /**
@@ -56,7 +56,7 @@ export const useFavoritesStore = create<FavoritesStore>()(
              */
             isFavorite: (vehicleId) => {
                 const { favorites } = get();
-                return favorites.some(v => v.id === vehicleId);
+                return favorites.some((v) => v.id === vehicleId);
             },
 
             /**

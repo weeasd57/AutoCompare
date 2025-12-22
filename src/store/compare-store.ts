@@ -5,13 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type {
-    NormalizedSpec,
-    ComparisonResult,
-    ComparisonHighlight,
-    VehicleSuggestion,
-    CompareState,
-} from '@/types/vehicle';
+import type { NormalizedSpec, VehicleSuggestion, CompareState } from '@/types/vehicle';
 import { compareVehicles, generateHighlights } from '@/lib/compare-engine';
 
 /**
@@ -67,7 +61,7 @@ export const useCompareStore = create<CompareStore>()(
                 const { vehicles } = get();
 
                 // Prevent duplicates
-                if (vehicles.some(v => v.id === vehicle.id)) {
+                if (vehicles.some((v) => v.id === vehicle.id)) {
                     return;
                 }
 
@@ -76,7 +70,7 @@ export const useCompareStore = create<CompareStore>()(
                 set({
                     vehicles: newVehicles,
                     comparison: null,
-                    highlights: []
+                    highlights: [],
                 });
 
                 // Auto-run comparison if we have at least 2 vehicles
@@ -90,12 +84,12 @@ export const useCompareStore = create<CompareStore>()(
              */
             removeVehicle: (vehicleId) => {
                 const { vehicles } = get();
-                const newVehicles = vehicles.filter(v => v.id !== vehicleId);
+                const newVehicles = vehicles.filter((v) => v.id !== vehicleId);
 
                 set({
                     vehicles: newVehicles,
                     comparison: null,
-                    highlights: []
+                    highlights: [],
                 });
 
                 if (newVehicles.length >= 2) {
@@ -122,7 +116,6 @@ export const useCompareStore = create<CompareStore>()(
                     // Let's allow > 0 to perhaps show specs, but highlights need >= 2 generally.
                     // For now, let's keep it simple: if < 2, maybe just clear comparison?
                     // Or we can just run it, but highlights will be empty.
-                    console.log("Running comparisons with", vehicles.length);
                 }
 
                 set({ isLoading: true, error: null });

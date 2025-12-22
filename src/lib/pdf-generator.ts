@@ -6,11 +6,7 @@
 'use client';
 
 import { jsPDF } from 'jspdf';
-import type {
-    ComparisonResult,
-    ComparisonHighlight,
-    NormalizedSpec,
-} from '@/types/vehicle';
+import type { ComparisonResult, ComparisonHighlight } from '@/types/vehicle';
 import { AppSettings } from '@/context/SettingsContext';
 
 /**
@@ -108,7 +104,7 @@ export async function generateComparisonPDF(
     doc.setFontSize(PDF_STYLES.headingSize);
     doc.setFont('helvetica', 'bold');
 
-    const titleText = vehicles.map(v => v.model).join(' vs ');
+    const titleText = vehicles.map((v) => v.model).join(' vs ');
     const splitTitle = doc.splitTextToSize(titleText, contentWidth);
     doc.text(splitTitle, margin, yPosition);
     yPosition += splitTitle.length * 8 + 10;
@@ -165,7 +161,7 @@ export async function generateComparisonPDF(
     doc.text('Specification', margin + 2, yPosition);
 
     vehicles.forEach((v, index) => {
-        const xPos = margin + labelColWidth + (index * valueColWidth);
+        const xPos = margin + labelColWidth + index * valueColWidth;
         const name = `${v.make} ${v.model}`;
         // Truncate if too long
         const safeName = name.length > 20 ? name.substring(0, 18) + '...' : name;
@@ -195,7 +191,7 @@ export async function generateComparisonPDF(
 
         // Values
         vehicles.forEach((v, index) => {
-            const xPos = margin + labelColWidth + (index * valueColWidth);
+            const xPos = margin + labelColWidth + index * valueColWidth;
             const val = category.values[v.id];
 
             // Format value
@@ -274,7 +270,7 @@ export async function exportComparisonToPDF(
     const blob = await generateComparisonPDF(comparison, highlights, settings);
 
     // Create filename from models
-    const modelNames = comparison.vehicles.map(v => v.model.replace(/\s+/g, '-')).join('-vs-');
+    const modelNames = comparison.vehicles.map((v) => v.model.replace(/\s+/g, '-')).join('-vs-');
     const filename = `comparison-${modelNames}-${Date.now()}.pdf`;
 
     downloadPDF(blob, filename);
@@ -288,7 +284,7 @@ export function generateShareText(
     highlights: ComparisonHighlight[],
     settings: AppSettings
 ): string {
-    const title = comparison.vehicles.map(v => `${v.make} ${v.model} ${v.year}`).join(' vs ');
+    const title = comparison.vehicles.map((v) => `${v.make} ${v.model} ${v.year}`).join(' vs ');
 
     let text = `🚗 ${settings.siteName} Comparison: ${title}\n\n`;
     text += `Key Insights:\n`;

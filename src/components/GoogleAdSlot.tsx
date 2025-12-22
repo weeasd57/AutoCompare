@@ -15,7 +15,13 @@ interface GoogleAdSlotProps {
  * Reusable Google AdSense ad slot component.
  * Requires global AdSense script and NEXT_PUBLIC_ADSENSE_CLIENT env variable.
  */
-export function GoogleAdSlot({ className, style, slot, format = 'auto', fullWidthResponsive = true }: GoogleAdSlotProps) {
+export function GoogleAdSlot({
+    className,
+    style,
+    slot,
+    format = 'auto',
+    fullWidthResponsive = true,
+}: GoogleAdSlotProps) {
     const adRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {

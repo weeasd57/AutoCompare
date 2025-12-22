@@ -6,7 +6,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Filter, X, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
+import { Filter, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { NormalizedSpec } from '@/types/vehicle';
 
@@ -19,6 +19,12 @@ export interface FilterState {
     fuelTypes: string[];
     drivetrains: string[];
 }
+
+const FILTERS_CLASSES = {
+    badgeBase: 'px-2 py-1 text-xs font-bold border border-black',
+    badgeActive: 'bg-black text-white',
+    badgeInactive: 'bg-white hover:bg-gray-100',
+};
 
 interface AdvancedFiltersProps {
     vehicles: NormalizedSpec[];
@@ -47,12 +53,18 @@ export function AdvancedFilters({ vehicles, onFilter, className }: AdvancedFilte
 
     // Extract unique values from vehicles
     const options = useMemo(() => {
-        const bodyStyles = Array.from(new Set(vehicles.map(v => v.bodyStyle).filter(Boolean))) as string[];
-        const fuelTypes = Array.from(new Set(vehicles.map(v => v.fuelType).filter(Boolean))) as string[];
-        const drivetrains = Array.from(new Set(vehicles.map(v => v.drivetrain).filter(Boolean))) as string[];
+        const bodyStyles = Array.from(
+            new Set(vehicles.map((v) => v.bodyStyle).filter(Boolean))
+        ) as string[];
+        const fuelTypes = Array.from(
+            new Set(vehicles.map((v) => v.fuelType).filter(Boolean))
+        ) as string[];
+        const drivetrains = Array.from(
+            new Set(vehicles.map((v) => v.drivetrain).filter(Boolean))
+        ) as string[];
 
-        const prices = vehicles.map(v => v.basePrice).filter(Boolean) as number[];
-        const years = vehicles.map(v => v.year).filter(Boolean) as number[];
+        const prices = vehicles.map((v) => v.basePrice).filter(Boolean) as number[];
+        const years = vehicles.map((v) => v.year).filter(Boolean) as number[];
 
         return {
             bodyStyles: bodyStyles.sort(),
@@ -71,33 +83,37 @@ export function AdvancedFilters({ vehicles, onFilter, className }: AdvancedFilte
 
         // Price filter
         if (filters.priceMin !== null) {
-            filtered = filtered.filter(v => (v.basePrice || 0) >= filters.priceMin!);
+            filtered = filtered.filter((v) => (v.basePrice || 0) >= filters.priceMin!);
         }
         if (filters.priceMax !== null) {
-            filtered = filtered.filter(v => (v.basePrice || 0) <= filters.priceMax!);
+            filtered = filtered.filter((v) => (v.basePrice || 0) <= filters.priceMax!);
         }
 
         // Year filter
         if (filters.yearMin !== null) {
-            filtered = filtered.filter(v => v.year >= filters.yearMin!);
+            filtered = filtered.filter((v) => v.year >= filters.yearMin!);
         }
         if (filters.yearMax !== null) {
-            filtered = filtered.filter(v => v.year <= filters.yearMax!);
+            filtered = filtered.filter((v) => v.year <= filters.yearMax!);
         }
 
         // Body style filter
         if (filters.bodyStyles.length > 0) {
-            filtered = filtered.filter(v => v.bodyStyle && filters.bodyStyles.includes(v.bodyStyle));
+            filtered = filtered.filter(
+                (v) => v.bodyStyle && filters.bodyStyles.includes(v.bodyStyle)
+            );
         }
 
         // Fuel type filter
         if (filters.fuelTypes.length > 0) {
-            filtered = filtered.filter(v => v.fuelType && filters.fuelTypes.includes(v.fuelType));
+            filtered = filtered.filter((v) => v.fuelType && filters.fuelTypes.includes(v.fuelType));
         }
 
         // Drivetrain filter
         if (filters.drivetrains.length > 0) {
-            filtered = filtered.filter(v => v.drivetrain && filters.drivetrains.includes(v.drivetrain));
+            filtered = filtered.filter(
+                (v) => v.drivetrain && filters.drivetrains.includes(v.drivetrain)
+            );
         }
 
         // Count active filters
@@ -118,15 +134,12 @@ export function AdvancedFilters({ vehicles, onFilter, className }: AdvancedFilte
         setFilters(defaultFilters);
     };
 
-    const toggleArrayFilter = (
-        key: 'bodyStyles' | 'fuelTypes' | 'drivetrains',
-        value: string
-    ) => {
-        setFilters(prev => ({
+    const toggleArrayFilter = (key: 'bodyStyles' | 'fuelTypes' | 'drivetrains', value: string) => {
+        setFilters((prev) => ({
             ...prev,
             [key]: prev[key].includes(value)
-                ? prev[key].filter(v => v !== value)
-                : [...prev[key], value]
+                ? prev[key].filter((v) => v !== value)
+                : [...prev[key], value],
         }));
     };
 
@@ -161,7 +174,9 @@ export function AdvancedFilters({ vehicles, onFilter, className }: AdvancedFilte
                         tabIndex={0}
                         className="fixed inset-0 z-40"
                         onClick={() => setIsOpen(false)}
-                        onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false); }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Escape') setIsOpen(false);
+                        }}
                         aria-label="Close filters"
                     />
 
@@ -192,10 +207,14 @@ export function AdvancedFilters({ vehicles, onFilter, className }: AdvancedFilte
                                         type="number"
                                         placeholder="Min"
                                         value={filters.priceMin || ''}
-                                        onChange={(e) => setFilters(prev => ({
-                                            ...prev,
-                                            priceMin: e.target.value ? Number(e.target.value) : null
-                                        }))}
+                                        onChange={(e) =>
+                                            setFilters((prev) => ({
+                                                ...prev,
+                                                priceMin: e.target.value
+                                                    ? Number(e.target.value)
+                                                    : null,
+                                            }))
+                                        }
                                         className="w-full px-2 py-1.5 text-sm border-2 border-black"
                                     />
                                     <span className="self-center">-</span>
@@ -203,10 +222,14 @@ export function AdvancedFilters({ vehicles, onFilter, className }: AdvancedFilte
                                         type="number"
                                         placeholder="Max"
                                         value={filters.priceMax || ''}
-                                        onChange={(e) => setFilters(prev => ({
-                                            ...prev,
-                                            priceMax: e.target.value ? Number(e.target.value) : null
-                                        }))}
+                                        onChange={(e) =>
+                                            setFilters((prev) => ({
+                                                ...prev,
+                                                priceMax: e.target.value
+                                                    ? Number(e.target.value)
+                                                    : null,
+                                            }))
+                                        }
                                         className="w-full px-2 py-1.5 text-sm border-2 border-black"
                                     />
                                 </div>
@@ -222,10 +245,14 @@ export function AdvancedFilters({ vehicles, onFilter, className }: AdvancedFilte
                                         type="number"
                                         placeholder="From"
                                         value={filters.yearMin || ''}
-                                        onChange={(e) => setFilters(prev => ({
-                                            ...prev,
-                                            yearMin: e.target.value ? Number(e.target.value) : null
-                                        }))}
+                                        onChange={(e) =>
+                                            setFilters((prev) => ({
+                                                ...prev,
+                                                yearMin: e.target.value
+                                                    ? Number(e.target.value)
+                                                    : null,
+                                            }))
+                                        }
                                         className="w-full px-2 py-1.5 text-sm border-2 border-black"
                                     />
                                     <span className="self-center">-</span>
@@ -233,10 +260,14 @@ export function AdvancedFilters({ vehicles, onFilter, className }: AdvancedFilte
                                         type="number"
                                         placeholder="To"
                                         value={filters.yearMax || ''}
-                                        onChange={(e) => setFilters(prev => ({
-                                            ...prev,
-                                            yearMax: e.target.value ? Number(e.target.value) : null
-                                        }))}
+                                        onChange={(e) =>
+                                            setFilters((prev) => ({
+                                                ...prev,
+                                                yearMax: e.target.value
+                                                    ? Number(e.target.value)
+                                                    : null,
+                                            }))
+                                        }
                                         className="w-full px-2 py-1.5 text-sm border-2 border-black"
                                     />
                                 </div>
@@ -249,15 +280,17 @@ export function AdvancedFilters({ vehicles, onFilter, className }: AdvancedFilte
                                         Body Style
                                     </span>
                                     <div className="flex flex-wrap gap-1">
-                                        {options.bodyStyles.map(style => (
+                                        {options.bodyStyles.map((style) => (
                                             <button
                                                 key={style}
-                                                onClick={() => toggleArrayFilter('bodyStyles', style)}
+                                                onClick={() =>
+                                                    toggleArrayFilter('bodyStyles', style)
+                                                }
                                                 className={clsx(
-                                                    'px-2 py-1 text-xs font-bold border border-black',
+                                                    FILTERS_CLASSES.badgeBase,
                                                     filters.bodyStyles.includes(style)
-                                                        ? 'bg-black text-white'
-                                                        : 'bg-white hover:bg-gray-100'
+                                                        ? FILTERS_CLASSES.badgeActive
+                                                        : FILTERS_CLASSES.badgeInactive
                                                 )}
                                             >
                                                 {style}
@@ -274,15 +307,15 @@ export function AdvancedFilters({ vehicles, onFilter, className }: AdvancedFilte
                                         Fuel Type
                                     </span>
                                     <div className="flex flex-wrap gap-1">
-                                        {options.fuelTypes.map(fuel => (
+                                        {options.fuelTypes.map((fuel) => (
                                             <button
                                                 key={fuel}
                                                 onClick={() => toggleArrayFilter('fuelTypes', fuel)}
                                                 className={clsx(
-                                                    'px-2 py-1 text-xs font-bold border border-black',
+                                                    FILTERS_CLASSES.badgeBase,
                                                     filters.fuelTypes.includes(fuel)
-                                                        ? 'bg-black text-white'
-                                                        : 'bg-white hover:bg-gray-100'
+                                                        ? FILTERS_CLASSES.badgeActive
+                                                        : FILTERS_CLASSES.badgeInactive
                                                 )}
                                             >
                                                 {fuel}
@@ -299,15 +332,17 @@ export function AdvancedFilters({ vehicles, onFilter, className }: AdvancedFilte
                                         Drivetrain
                                     </span>
                                     <div className="flex flex-wrap gap-1">
-                                        {options.drivetrains.map(drive => (
+                                        {options.drivetrains.map((drive) => (
                                             <button
                                                 key={drive}
-                                                onClick={() => toggleArrayFilter('drivetrains', drive)}
+                                                onClick={() =>
+                                                    toggleArrayFilter('drivetrains', drive)
+                                                }
                                                 className={clsx(
-                                                    'px-2 py-1 text-xs font-bold border border-black',
+                                                    FILTERS_CLASSES.badgeBase,
                                                     filters.drivetrains.includes(drive)
-                                                        ? 'bg-black text-white'
-                                                        : 'bg-white hover:bg-gray-100'
+                                                        ? FILTERS_CLASSES.badgeActive
+                                                        : FILTERS_CLASSES.badgeInactive
                                                 )}
                                             >
                                                 {drive}

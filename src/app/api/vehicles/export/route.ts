@@ -23,18 +23,24 @@ export async function GET() {
         // Create CSV content
         const csvRows = [
             headers.join(','), // Header row
-            ...vehicles.map(vehicle =>
-                headers.map(header => {
-                    const value = vehicle[header];
-                    // Escape values with commas or quotes
-                    if (value === null || value === undefined) return '';
-                    const stringValue = String(value);
-                    if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-                        return `"${stringValue.replace(/"/g, '""')}"`;
-                    }
-                    return stringValue;
-                }).join(',')
-            )
+            ...vehicles.map((vehicle) =>
+                headers
+                    .map((header) => {
+                        const value = vehicle[header];
+                        // Escape values with commas or quotes
+                        if (value === null || value === undefined) return '';
+                        const stringValue = String(value);
+                        if (
+                            stringValue.includes(',') ||
+                            stringValue.includes('"') ||
+                            stringValue.includes('\n')
+                        ) {
+                            return `"${stringValue.replace(/"/g, '""')}"`;
+                        }
+                        return stringValue;
+                    })
+                    .join(',')
+            ),
         ];
 
         const csvContent = csvRows.join('\n');

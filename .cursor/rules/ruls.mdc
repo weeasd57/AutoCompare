@@ -146,8 +146,8 @@ alwaysApply: true
 ### ✅ CodeCanyon Code Quality Standards (Next.js Edition)
 
 **1. Linting & Formatting:**
-- **Strict ESLint:** Must use `next/core-web-vitals` + `plugin:security/recommended` + `plugin:jsx-a11y/recommended`.
-- **Prettier:** All files must be formatted using Prettier.
+- **** Strict ESLint:** Must use `next/core-web-vitals` + `plugin:security/recommended` + `plugin:jsx-a11y/recommended` + `plugin:sonarjs/recommended`.
+- **** Prettier:** All files must be formatted using Prettier.
 - **Zero Errors:** Run `npm run lint` and `npm run lint:count`. Must have **0 Errors** before submission.
 - **TypeScript:** Use officially supported TypeScript versions (pinned to `5.3.3` to avoid tool conflicts).
 
@@ -169,3 +169,82 @@ alwaysApply: true
     - Use `wp_enqueue_script` / `wp_enqueue_style` for all assets.
     - NO hardcoded `<script>` or `<style>` tags in templates.
     - NO development files (`node_modules`, `composer.json`, `phpcs.xml`) in the production zip.
+172: 
+173: 
+174: ### ☕ Java Code Quality & Testing Standards
+175: 
+176: **1. Unit & Integration Testing:**
+177: - **JUnit 5 (Jupiter):** The standard for writing and running tests.
+178: - **AssertJ:** Use for fluent and readable assertions.
+179: - **Mockito:** Use for mocking dependencies in unit tests.
+180: - **Testcontainers:** (Optional) For integration tests requiring real databases or services.
+181: 
+182: **2. Static Analysis & Linting:**
+183: - **Checkstyle:** Use `google_checks.xml` or `sun_checks.xml` to enforce coding standards.
+184: - **PMD:** To detect common programming flaws and anti-patterns.
+185: - **SpotBugs:** To find potential bugs in Java code.
+186: - **SonarLint:** Recommended IDE extension for real-time feedback.
+187: 
+188: **3. Code Coverage:**
+189: - **JaCoCo:** Minimum **80% code coverage** required for submission.
+190: - **Maven/Gradle:** Ensure coverage reports are generated during the build process.
+191: 
+192: **4. Security:**
+193: - **OWASP Dependency-Check:** To identify project dependencies with known vulnerabilities.
+194: - **SpotBugs (with FindSecBugs):** For security-specific static analysis.
+195: 
+196: **5. Build & CI:**
+197: - **Maven/Gradle:** Stick to standard project structures.
+198: - **Zero Warnings:** Build must pass with zero compiler warnings and zero quality gate failures in SonarQube.
+
+
+.eslintrc.json
+
+{
+    "extends": [
+        "next/core-web-vitals",
+        "plugin:jsx-a11y/recommended",
+        "plugin:sonarjs/recommended",
+        "prettier"
+    ],
+    "plugins": [
+        "security",
+        "unused-imports",
+        "prettier"
+    ],
+    "rules": {
+        "prettier/prettier": "error",
+        "security/detect-object-injection": "off",
+        "unused-imports/no-unused-imports": "error",
+        "unused-imports/no-unused-vars": [
+            "warn",
+            {
+                "vars": "all",
+                "varsIgnorePattern": "^_",
+                "args": "after-used",
+                "argsIgnorePattern": "^_"
+            }
+        ],
+        "jsx-a11y/anchor-is-valid": [
+            "error",
+            {
+                "components": [
+                    "Link"
+                ],
+                "specialLink": [
+                    "hrefLeft",
+                    "hrefRight"
+                ],
+                "aspects": [
+                    "invalidHref",
+                    "preferButton"
+                ]
+            }
+        ]
+    }
+}
+
+- for test code quality run:
+    * npm run lint && npm run format:checknpm run lint && npm run format:check
+    * npm run lint && npm run format:check
+    * npm run lint:count

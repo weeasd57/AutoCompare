@@ -6,7 +6,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Share2, Link, Copy, Check, Twitter, Facebook, MessageCircle } from 'lucide-react';
+import { Share2, Copy, Check, Twitter, Facebook, MessageCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { NormalizedSpec } from '@/types/vehicle';
 
@@ -28,16 +28,17 @@ export function ShareButton({ vehicles, className }: ShareButtonProps) {
         if (typeof window === 'undefined') return '';
 
         const baseUrl = window.location.origin;
-        const vehicleIds = vehicles.map(v => v.id).join(',');
+        const vehicleIds = vehicles.map((v) => v.id).join(',');
         return `${baseUrl}/compare?vehicles=${encodeURIComponent(vehicleIds)}`;
     };
 
     const shareUrl = generateShareUrl();
 
     // Generate share text
-    const shareText = vehicles.length > 0
-        ? `Check out this vehicle comparison: ${vehicles.map(v => `${v.make} ${v.model}`).join(' vs ')}`
-        : 'Check out this vehicle comparison';
+    const shareText =
+        vehicles.length > 0
+            ? `Check out this vehicle comparison: ${vehicles.map((v) => v.make + ' ' + v.model).join(' vs ')}`
+            : 'Check out this vehicle comparison';
 
     const handleCopyLink = async () => {
         try {
@@ -57,7 +58,7 @@ export function ShareButton({ vehicles, className }: ShareButtonProps) {
                     text: shareText,
                     url: shareUrl,
                 });
-            } catch (err) {
+            } catch {
                 // User cancelled or error
             }
         }
@@ -79,7 +80,7 @@ export function ShareButton({ vehicles, className }: ShareButtonProps) {
         {
             name: 'WhatsApp',
             icon: MessageCircle,
-            url: `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
+            url: `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`,
             color: 'bg-green-500 hover:bg-green-600',
         },
     ];
@@ -114,7 +115,9 @@ export function ShareButton({ vehicles, className }: ShareButtonProps) {
                         tabIndex={0}
                         className="fixed inset-0 z-40"
                         onClick={() => setIsOpen(false)}
-                        onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false); }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Escape') setIsOpen(false);
+                        }}
                         aria-label="Close panel"
                     />
 
@@ -130,7 +133,9 @@ export function ShareButton({ vehicles, className }: ShareButtonProps) {
 
                         {/* Copy Link */}
                         <div className="p-3 border-b border-gray-200">
-                            <p className="text-xs font-bold uppercase text-gray-500 mb-2">Copy Link</p>
+                            <p className="text-xs font-bold uppercase text-gray-500 mb-2">
+                                Copy Link
+                            </p>
                             <div className="flex gap-2">
                                 <input
                                     type="text"
@@ -147,14 +152,20 @@ export function ShareButton({ vehicles, className }: ShareButtonProps) {
                                             : 'bg-yellow-400 hover:bg-yellow-500'
                                     )}
                                 >
-                                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                    {copied ? (
+                                        <Check className="w-4 h-4" />
+                                    ) : (
+                                        <Copy className="w-4 h-4" />
+                                    )}
                                 </button>
                             </div>
                         </div>
 
                         {/* Social Share */}
                         <div className="p-3">
-                            <p className="text-xs font-bold uppercase text-gray-500 mb-2">Share on</p>
+                            <p className="text-xs font-bold uppercase text-gray-500 mb-2">
+                                Share on
+                            </p>
                             <div className="flex gap-2">
                                 {socialLinks.map((social) => (
                                     <a

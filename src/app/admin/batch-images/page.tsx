@@ -25,7 +25,8 @@ export default function BatchImagesPage() {
 
     const getVehicleImageErrorMessage = (payload: any) => {
         const status = typeof payload?.status === 'number' ? payload.status : undefined;
-        const googleError = typeof payload?.googleError === 'string' ? payload.googleError : undefined;
+        const googleError =
+            typeof payload?.googleError === 'string' ? payload.googleError : undefined;
 
         if (status === 429) {
             return {
@@ -61,7 +62,7 @@ export default function BatchImagesPage() {
     const [isFetchingAll, setIsFetchingAll] = useState(false);
     const [isSavingAll, setIsSavingAll] = useState(false);
 
-    const filteredVehicles = vehicles.filter(v => {
+    const filteredVehicles = vehicles.filter((v) => {
         const q = searchQuery.toLowerCase();
         return (
             v.make.toLowerCase().includes(q) ||
@@ -71,8 +72,8 @@ export default function BatchImagesPage() {
     });
 
     const toggleVehicle = (id: string) => {
-        setSelectedVehicleIds(prev =>
-            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+        setSelectedVehicleIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
         );
     };
 
@@ -80,12 +81,12 @@ export default function BatchImagesPage() {
         if (selectedVehicleIds.length === filteredVehicles.length) {
             setSelectedVehicleIds([]);
         } else {
-            setSelectedVehicleIds(filteredVehicles.map(v => v.id));
+            setSelectedVehicleIds(filteredVehicles.map((v) => v.id));
         }
     };
 
     const fetchImagesForVehicle = async (vehicle: NormalizedSpec) => {
-        setImageStates(prev => ({
+        setImageStates((prev) => ({
             ...prev,
             [vehicle.id]: {
                 ...(prev[vehicle.id] || { images: [], selectedImages: [] }),
@@ -106,7 +107,7 @@ export default function BatchImagesPage() {
                 });
 
                 promises.push(
-                    fetch(`/api/vehicle-image?${params.toString()}`).then(async res => {
+                    fetch(`/api/vehicle-image?${params.toString()}`).then(async (res) => {
                         const data = await res.json();
                         if (!res.ok || !data.imageUrl) {
                             const msg = getVehicleImageErrorMessage(data);
@@ -122,10 +123,13 @@ export default function BatchImagesPage() {
 
             const settled = await Promise.allSettled(promises);
             const imageUrls = settled
-                .filter((r): r is PromiseFulfilledResult<{ imageUrl: string }> => r.status === 'fulfilled')
-                .map(r => r.value.imageUrl);
+                .filter(
+                    (r): r is PromiseFulfilledResult<{ imageUrl: string }> =>
+                        r.status === 'fulfilled'
+                )
+                .map((r) => r.value.imageUrl);
 
-            setImageStates(prev => ({
+            setImageStates((prev) => ({
                 ...prev,
                 [vehicle.id]: {
                     images: imageUrls,
@@ -136,7 +140,9 @@ export default function BatchImagesPage() {
             }));
 
             if (imageUrls.length === 0) {
-                toast.warning(`No images found for ${vehicle.make} ${vehicle.model} ${vehicle.year}`);
+                toast.warning(
+                    `No images found for ${vehicle.make} ${vehicle.model} ${vehicle.year}`
+                );
             }
         } catch (err: any) {
             const message = err?.message || 'Failed to fetch images';
@@ -148,7 +154,7 @@ export default function BatchImagesPage() {
                 toast.error(message);
             }
 
-            setImageStates(prev => ({
+            setImageStates((prev) => ({
                 ...prev,
                 [vehicle.id]: {
                     images: [],
@@ -161,23 +167,23 @@ export default function BatchImagesPage() {
     };
 
     const fetchAllSelected = async () => {
-        const toFetch = vehicles.filter(v => selectedVehicleIds.includes(v.id));
+        const toFetch = vehicles.filter((v) => selectedVehicleIds.includes(v.id));
         if (toFetch.length === 0) return;
 
         setIsFetchingAll(true);
-        await Promise.allSettled(toFetch.map(v => fetchImagesForVehicle(v)));
+        await Promise.allSettled(toFetch.map((v) => fetchImagesForVehicle(v)));
         setIsFetchingAll(false);
         toast.success(`Fetched images for ${toFetch.length} vehicles`);
     };
 
     const toggleImageSelection = (vehicleId: string, index: number) => {
-        setImageStates(prev => {
+        setImageStates((prev) => {
             const current = prev[vehicleId];
             if (!current) return prev;
 
             const exists = current.selectedImages.includes(index);
             const selected = exists
-                ? current.selectedImages.filter(i => i !== index)
+                ? current.selectedImages.filter((i) => i !== index)
                 : [...current.selectedImages, index];
 
             return {
@@ -188,7 +194,7 @@ export default function BatchImagesPage() {
     };
 
     const toggleAllImagesForVehicle = (vehicleId: string) => {
-        setImageStates(prev => {
+        setImageStates((prev) => {
             const current = prev[vehicleId];
             if (!current || current.images.length === 0) return prev;
 
@@ -197,9 +203,7 @@ export default function BatchImagesPage() {
                 ...prev,
                 [vehicleId]: {
                     ...current,
-                    selectedImages: allSelected
-                        ? []
-                        : current.images.map((_, idx) => idx),
+                    selectedImages: allSelected ? [] : current.images.map((_, idx) => idx),
                 },
             };
         });
@@ -210,14 +214,16 @@ export default function BatchImagesPage() {
 
         let totalImages = 0;
 
-        const savePromises = selectedVehicleIds.map(async id => {
+        const savePromises = selectedVehicleIds.map(async (id) => {
             const state = imageStates[id];
             if (!state || state.selectedImages.length === 0) return;
 
-            const vehicle = vehicles.find(v => v.id === id);
+            const vehicle = vehicles.find((v) => v.id === id);
             if (!vehicle) return;
 
-            const chosenImageUrls = state.selectedImages.map(i => state.images[i]).filter(Boolean);
+            const chosenImageUrls = state.selectedImages
+                .map((i) => state.images[i])
+                .filter(Boolean);
             if (chosenImageUrls.length === 0) return;
 
             const limited = chosenImageUrls.slice(0, 5);
@@ -247,11 +253,13 @@ export default function BatchImagesPage() {
             localStorage.setItem('autocompare_vehicles_updated_at', String(Date.now()));
         } catch {}
         window.dispatchEvent(new Event('autocompare-vehicles-updated'));
-        toast.success(`Saved images for ${selectedVehicleIds.length} vehicles (total ${totalImages} images stored)`);
+        toast.success(
+            `Saved images for ${selectedVehicleIds.length} vehicles (total ${totalImages} images stored)`
+        );
     };
 
     const anySelectedImages = Object.values(imageStates).some(
-        s => s && s.selectedImages && s.selectedImages.length > 0
+        (s) => s && s.selectedImages && s.selectedImages.length > 0
     );
 
     return (
@@ -285,7 +293,12 @@ export default function BatchImagesPage() {
                         </div>
 
                         <div>
-                            <label htmlFor="imagesPerVehicle" className="block text-xs font-bold uppercase mb-1">Images per vehicle</label>
+                            <label
+                                htmlFor="imagesPerVehicle"
+                                className="block text-xs font-bold uppercase mb-1"
+                            >
+                                Images per vehicle
+                            </label>
                             <select
                                 id="imagesPerVehicle"
                                 value={imagesPerVehicle}
@@ -305,7 +318,8 @@ export default function BatchImagesPage() {
                                 onClick={toggleSelectAll}
                                 className="w-full px-4 py-2 bg-white border-2 border-black font-bold uppercase text-xs hover:bg-gray-100"
                             >
-                                {selectedVehicleIds.length === filteredVehicles.length && filteredVehicles.length > 0
+                                {selectedVehicleIds.length === filteredVehicles.length &&
+                                filteredVehicles.length > 0
                                     ? 'Deselect all vehicles'
                                     : 'Select all vehicles'}
                             </button>
@@ -328,14 +342,20 @@ export default function BatchImagesPage() {
                     </div>
 
                     <div className="mt-3 text-xs text-gray-700 flex justify-between">
-                        <span>{selectedVehicleIds.length} of {filteredVehicles.length} vehicles selected</span>
-                        <span>{imagesPerVehicle} images/vehicle = {selectedVehicleIds.length * imagesPerVehicle} total requests</span>
+                        <span>
+                            {selectedVehicleIds.length} of {filteredVehicles.length} vehicles
+                            selected
+                        </span>
+                        <span>
+                            {imagesPerVehicle} images/vehicle ={' '}
+                            {selectedVehicleIds.length * imagesPerVehicle} total requests
+                        </span>
                     </div>
                 </div>
 
                 {/* Vehicle list */}
                 <div className="space-y-4">
-                    {filteredVehicles.map(vehicle => {
+                    {filteredVehicles.map((vehicle) => {
                         const state = imageStates[vehicle.id];
                         const isSelected = selectedVehicleIds.includes(vehicle.id);
                         const hasImages = state && state.images.length > 0;
@@ -354,7 +374,9 @@ export default function BatchImagesPage() {
                                             onClick={() => toggleVehicle(vehicle.id)}
                                             className={clsx(
                                                 'w-6 h-6 rounded-md border-2 flex items-center justify-center',
-                                                isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-black bg-white'
+                                                isSelected
+                                                    ? 'bg-blue-600 border-blue-600 text-white'
+                                                    : 'border-black bg-white'
                                             )}
                                         >
                                             {isSelected && <Check className="w-4 h-4" />}
@@ -392,7 +414,9 @@ export default function BatchImagesPage() {
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="font-bold">Images</span>
                                             <button
-                                                onClick={() => toggleAllImagesForVehicle(vehicle.id)}
+                                                onClick={() =>
+                                                    toggleAllImagesForVehicle(vehicle.id)
+                                                }
                                                 className="text-blue-600 hover:underline"
                                             >
                                                 {state.selectedImages.length === state.images.length
@@ -405,7 +429,9 @@ export default function BatchImagesPage() {
                                                 <button
                                                     key={idx}
                                                     type="button"
-                                                    onClick={() => toggleImageSelection(vehicle.id, idx)}
+                                                    onClick={() =>
+                                                        toggleImageSelection(vehicle.id, idx)
+                                                    }
                                                     className={clsx(
                                                         'relative border-2 rounded-lg overflow-hidden group',
                                                         state.selectedImages.includes(idx)
@@ -422,7 +448,9 @@ export default function BatchImagesPage() {
                                                             className="object-cover"
                                                             unoptimized
                                                             onError={(e) => {
-                                                                (e.currentTarget as any).style.opacity = '0.3';
+                                                                (
+                                                                    e.currentTarget as any
+                                                                ).style.opacity = '0.3';
                                                             }}
                                                         />
                                                     </div>

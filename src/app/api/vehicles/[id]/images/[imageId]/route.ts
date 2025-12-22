@@ -87,7 +87,10 @@ export async function DELETE(
             return NextResponse.json({ error: 'Invalid imageId' }, { status: 400 });
         }
 
-        await query('DELETE FROM vehicle_images WHERE id = ? AND vehicle_id = ?', [imageId, vehicleId]);
+        await query('DELETE FROM vehicle_images WHERE id = ? AND vehicle_id = ?', [
+            imageId,
+            vehicleId,
+        ]);
         const imageUrlList = await syncVehicleImageUrl(vehicleId);
 
         return NextResponse.json({ success: true, imageUrlList });

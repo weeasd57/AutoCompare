@@ -11,32 +11,32 @@ export async function GET() {
     try {
         // Try to query using global pool
         try {
-            const admins = await staticQuery('SELECT COUNT(*) as count FROM admins') as any[];
+            const admins = (await staticQuery('SELECT COUNT(*) as count FROM admins')) as any[];
             const hasAdmins = admins[0].count > 0;
 
             let setupCompleted = false;
             try {
-                const settings = await staticQuery(
+                const settings = (await staticQuery(
                     "SELECT setting_value FROM settings WHERE setting_key = 'setup_completed'"
-                ) as any[];
+                )) as any[];
                 setupCompleted = settings.length > 0 && settings[0].setting_value === 'true';
-            } catch { }
+            } catch {}
 
             return NextResponse.json({
                 tablesExist: true,
                 hasAdmins,
                 setupCompleted,
-                needsSetup: !hasAdmins || !setupCompleted
+                needsSetup: !hasAdmins || !setupCompleted,
             });
-        } catch (dbError) {
+        } catch {
             return NextResponse.json({
                 tablesExist: false,
                 hasAdmins: false,
                 setupCompleted: false,
-                needsSetup: true
+                needsSetup: true,
             });
         }
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Failed to check status' }, { status: 500 });
     }
 }
@@ -62,12 +62,15 @@ export async function POST(request: Request) {
                 const database = dbConfig.database || 'autocompare';
                 const port = Number(dbConfig.port || 3306);
 
-                const ssl = host.includes('tidbcloud')
-                    ? { rejectUnauthorized: false }
-                    : undefined;
+                const ssl = host.includes('tidbcloud') ? { rejectUnauthorized: false } : undefined;
 
                 const connection = await mysql.createConnection({
-                    host, user, password, database, port, ssl
+                    host,
+                    user,
+                    password,
+                    database,
+                    port,
+                    ssl,
                 });
                 try {
                     const [rows] = await connection.query(sql, params);
@@ -91,7 +94,12 @@ export async function POST(request: Request) {
 
             // Connect to create tables
             const connection = await mysql.createConnection({
-                host, user, password, database, port, ssl
+                host,
+                user,
+                password,
+                database,
+                port,
+                ssl,
             });
 
             try {
@@ -195,12 +203,8 @@ export async function POST(request: Request) {
         );
 
         return NextResponse.json({ success: true, message: 'Admin created successfully' });
-
     } catch (err: any) {
         console.error('Setup error', err);
-        return NextResponse.json(
-            { error: err.message || 'Setup failed' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: err.message || 'Setup failed' }, { status: 500 });
     }
 }

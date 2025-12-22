@@ -53,9 +53,16 @@ export const useHistoryStore = create<HistoryStore>()(
                 const { history, maxEntries } = get();
 
                 // Check if this exact comparison already exists (by vehicle IDs)
-                const vehicleIds = vehicles.map(v => v.id).sort().join('-');
-                const exists = history.some(entry =>
-                    entry.vehicles.map(v => v.id).sort().join('-') === vehicleIds
+                const vehicleIds = vehicles
+                    .map((v) => v.id)
+                    .sort()
+                    .join('-');
+                const exists = history.some(
+                    (entry) =>
+                        entry.vehicles
+                            .map((v) => v.id)
+                            .sort()
+                            .join('-') === vehicleIds
                 );
 
                 if (exists) return;
@@ -76,7 +83,7 @@ export const useHistoryStore = create<HistoryStore>()(
              */
             removeFromHistory: (entryId) => {
                 const { history } = get();
-                set({ history: history.filter(entry => entry.id !== entryId) });
+                set({ history: history.filter((entry) => entry.id !== entryId) });
             },
 
             /**

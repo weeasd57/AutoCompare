@@ -5,10 +5,23 @@
 
 'use client';
 
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import type { NormalizedSpec } from '@/types/vehicle';
 import { clsx } from 'clsx';
 import { useState } from 'react';
+
+const CHART_TOOLTIP_STYLE = {
+    backgroundColor: '#ffffff',
+    borderColor: '#000000',
+    borderWidth: '2px',
+    borderRadius: '0px',
+    color: '#000000',
+    boxShadow: '4px 4px 0px 0px #000000',
+};
+
+const CHART_TEXT_COLOR = '#000000';
+const CHART_CURSOR_FILL = 'rgba(0,0,0,0.1)';
+const CARD_CLASSES = 'neo-card p-6';
 
 interface ComparisonChartProps {
     vehicles: NormalizedSpec[];
@@ -22,7 +35,7 @@ export function ComparisonChart({ vehicles, wins, className }: ComparisonChartPr
     if (vehicles.length === 0) return null;
 
     // Prepare data
-    const data = vehicles.map(v => ({
+    const data = vehicles.map((v) => ({
         name: `${v.make} ${v.model}`,
         hp: v.horsepower || 0,
         torque: v.torque || 0,
@@ -44,10 +57,7 @@ export function ComparisonChart({ vehicles, wins, className }: ComparisonChartPr
     }
 
     return (
-        <div className={clsx(
-            'neo-card p-6',
-            className
-        )}>
+        <div className={clsx(CARD_CLASSES, className)}>
             <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-black text-black uppercase">Visual Comparison</h3>
 
@@ -83,16 +93,9 @@ export function ComparisonChart({ vehicles, wins, className }: ComparisonChartPr
                             tickLine={false}
                         />
                         <Tooltip
-                            contentStyle={{
-                                backgroundColor: '#ffffff',
-                                borderColor: '#000000',
-                                borderWidth: '2px',
-                                borderRadius: '0px',
-                                color: '#000000',
-                                boxShadow: '4px 4px 0px 0px #000000'
-                            }}
-                            itemStyle={{ color: '#000000', fontWeight: 'bold' }}
-                            cursor={{ fill: 'rgba(0,0,0,0.1)' }}
+                            contentStyle={CHART_TOOLTIP_STYLE}
+                            itemStyle={{ color: CHART_TEXT_COLOR, fontWeight: 'bold' }}
+                            cursor={{ fill: CHART_CURSOR_FILL }}
                         />
                         <Bar
                             dataKey={metric}
@@ -118,13 +121,13 @@ interface SimpleChartProps {
 export function EconomyChart({ vehicles, className }: SimpleChartProps) {
     if (vehicles.length === 0) return null;
 
-    const data = vehicles.map(v => ({
+    const data = vehicles.map((v) => ({
         name: `${v.make} ${v.model}`,
         mpg: v.fuelCombinedMpg || 0,
     }));
 
     return (
-        <div className={clsx('neo-card p-6', className)}>
+        <div className={clsx(CARD_CLASSES, className)}>
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-black text-black uppercase">Fuel Economy (MPG)</h3>
             </div>
@@ -142,16 +145,9 @@ export function EconomyChart({ vehicles, className }: SimpleChartProps) {
                             tickLine={false}
                         />
                         <Tooltip
-                            contentStyle={{
-                                backgroundColor: '#ffffff',
-                                borderColor: '#000000',
-                                borderWidth: '2px',
-                                borderRadius: '0px',
-                                color: '#000000',
-                                boxShadow: '4px 4px 0px 0px #000000',
-                            }}
-                            itemStyle={{ color: '#000000', fontWeight: 'bold' }}
-                            cursor={{ fill: 'rgba(0,0,0,0.1)' }}
+                            contentStyle={CHART_TOOLTIP_STYLE}
+                            itemStyle={{ color: CHART_TEXT_COLOR, fontWeight: 'bold' }}
+                            cursor={{ fill: CHART_CURSOR_FILL }}
                         />
                         <Bar
                             dataKey="mpg"
@@ -172,13 +168,13 @@ export function EconomyChart({ vehicles, className }: SimpleChartProps) {
 export function PriceChart({ vehicles, className }: SimpleChartProps) {
     if (vehicles.length === 0) return null;
 
-    const data = vehicles.map(v => ({
+    const data = vehicles.map((v) => ({
         name: `${v.make} ${v.model}`,
         price: v.basePrice || 0,
     }));
 
     return (
-        <div className={clsx('neo-card p-6', className)}>
+        <div className={clsx(CARD_CLASSES, className)}>
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-black text-black uppercase">Price Comparison</h3>
             </div>
@@ -199,16 +195,9 @@ export function PriceChart({ vehicles, className }: SimpleChartProps) {
                         />
                         <YAxis type="number" hide />
                         <Tooltip
-                            contentStyle={{
-                                backgroundColor: '#ffffff',
-                                borderColor: '#000000',
-                                borderWidth: '2px',
-                                borderRadius: '0px',
-                                color: '#000000',
-                                boxShadow: '4px 4px 0px 0px #000000',
-                            }}
-                            itemStyle={{ color: '#000000', fontWeight: 'bold' }}
-                            cursor={{ fill: 'rgba(0,0,0,0.1)' }}
+                            contentStyle={CHART_TOOLTIP_STYLE}
+                            itemStyle={{ color: CHART_TEXT_COLOR, fontWeight: 'bold' }}
+                            cursor={{ fill: CHART_CURSOR_FILL }}
                         />
                         <Bar
                             dataKey="price"

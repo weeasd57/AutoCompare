@@ -79,24 +79,29 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
         window.addEventListener('storage', onStorage);
 
         return () => {
-            window.removeEventListener('autocompare-vehicles-updated', onVehiclesUpdated as EventListener);
+            window.removeEventListener(
+                'autocompare-vehicles-updated',
+                onVehiclesUpdated as EventListener
+            );
             window.removeEventListener('storage', onStorage);
         };
     }, []);
 
     // Derived Data for Dropdowns
     // Only show Makes that exist in our loaded vehicle list
-    const makes = Array.from(new Set(vehicles.map(v => v.make))).sort();
+    const makes = Array.from(new Set(vehicles.map((v) => v.make))).sort();
 
     // Only show Models for the selected Make
     const models = selectedMake
-        ? Array.from(new Set(vehicles.filter(v => v.make === selectedMake).map(v => v.model))).sort()
+        ? Array.from(
+              new Set(vehicles.filter((v) => v.make === selectedMake).map((v) => v.model))
+          ).sort()
         : [];
 
     const getYearsForModel = (make: string, model: string) => {
         return vehicles
-            .filter(v => v.make === make && v.model === model)
-            .map(v => v.year)
+            .filter((v) => v.make === make && v.model === model)
+            .map((v) => v.year)
             .sort((a, b) => b - a);
     };
 
@@ -104,11 +109,14 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
         if (!query || query.length < 2) return [];
         const lowerQuery = query.toLowerCase();
 
-        return vehicles.filter(v =>
-            v.make.toLowerCase().includes(lowerQuery) ||
-            v.model.toLowerCase().includes(lowerQuery) ||
-            `${v.make} ${v.model}`.toLowerCase().includes(lowerQuery)
-        ).slice(0, 8);
+        return vehicles
+            .filter(
+                (v) =>
+                    v.make.toLowerCase().includes(lowerQuery) ||
+                    v.model.toLowerCase().includes(lowerQuery) ||
+                    `${v.make} ${v.model}`.toLowerCase().includes(lowerQuery)
+            )
+            .slice(0, 8);
     };
 
     const searchVehicles = (query: string, limit: number = 10) => {
@@ -120,11 +128,11 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
     const getVehicle = (id: string, year?: number) => {
         // ID lookup strategy:
         // 1. Direct match
-        const direct = vehicles.find(v => v.id === id);
+        const direct = vehicles.find((v) => v.id === id);
         if (direct) return direct;
 
         // 2. Loose match for legacy URLs or partials (fallback)
-        return vehicles.find(v => v.id.includes(id) && (!year || v.year === year));
+        return vehicles.find((v) => v.id.includes(id) && (!year || v.year === year));
     };
 
     const getVehicleSpec = (id: string, year?: number) => {
@@ -134,24 +142,26 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
     const isLoaded = !loading;
 
     return (
-        <VehicleContext.Provider value={{
-            vehicles,
-            makes,
-            models,
-            selectedMake,
-            selectedModel,
-            selectedYear,
-            setSelectedMake,
-            setSelectedModel,
-            setSelectedYear,
-            getSuggestions,
-            searchVehicles,
-            getVehicle,
-            getVehicleSpec,
-            getYearsForModel,
-            loading,
-            isLoaded
-        }}>
+        <VehicleContext.Provider
+            value={{
+                vehicles,
+                makes,
+                models,
+                selectedMake,
+                selectedModel,
+                selectedYear,
+                setSelectedMake,
+                setSelectedModel,
+                setSelectedYear,
+                getSuggestions,
+                searchVehicles,
+                getVehicle,
+                getVehicleSpec,
+                getYearsForModel,
+                loading,
+                isLoaded,
+            }}
+        >
             {children}
         </VehicleContext.Provider>
     );
@@ -171,7 +181,7 @@ export function generateSpecFromSuggestion(suggestion: string): NormalizedSpec {
     const year = parts[parts.length - 1];
     const model = parts[parts.length - 2];
     const make = parts.slice(0, parts.length - 2).join(' ');
-    
+
     return {
         id: `${make.toLowerCase()}-${model.toLowerCase()}-${year}`,
         make,
@@ -202,6 +212,6 @@ export function generateSpecFromSuggestion(suggestion: string): NormalizedSpec {
         esc: null,
         basePrice: null,
         country: null,
-        manufacturer: null
+        manufacturer: null,
     };
 }

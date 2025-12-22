@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -12,8 +12,6 @@ import {
     Palette,
     ChevronLeft,
     Save,
-    AlertCircle,
-    CheckCircle,
     Loader2,
     RefreshCw,
     Trash2,
@@ -40,7 +38,8 @@ const defaultSettings: SettingsState = {
     siteName: 'AutoCompare',
     siteDescription: 'Compare vehicles side by side',
     seoTitle: 'AutoCompare - Smart Vehicle Comparison',
-    seoDescription: 'Compare vehicles side-by-side with smart insights. Find the perfect car by comparing specs, fuel economy, pricing, and more.',
+    seoDescription:
+        'Compare vehicles side-by-side with smart insights. Find the perfect car by comparing specs, fuel economy, pricing, and more.',
     seoKeywords: 'car comparison, vehicle specs, auto compare, car buying, vehicle comparison tool',
     primaryColor: '#facc15',
     enableComparison: true,
@@ -50,6 +49,9 @@ const defaultSettings: SettingsState = {
     enableExportShareButton: false,
     homeHeroImageUrl: '',
 };
+
+const READ_ONLY_MSG = 'Admin is read-only (demo mode)';
+
 export default function AdminSettings() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
@@ -62,6 +64,66 @@ export default function AdminSettings() {
     const heroFileInputRef = useRef<HTMLInputElement | null>(null);
     const [heroUploading, setHeroUploading] = useState(false);
     const [heroPreviewBust, setHeroPreviewBust] = useState<number>(0);
+
+    const fetchStats = useCallback(async () => {
+        try {
+            const res = await fetch('/api/vehicles');
+            const data = await res.json();
+            setStats({
+                vehicles: Array.isArray(data) ? data.length : 0,
+                comparisons: parseInt(localStorage.getItem('comparison_count') || '0', 10),
+            });
+        } catch (err) {
+            console.error('Failed to fetch stats', err);
+        }
+    }, []);
+
+    const fetchSettings = useCallback(async () => {
+        try {
+            const res = await fetch('/api/settings');
+            const data = await res.json();
+            if (res.ok && Object.keys(data).length > 0) {
+                const newSettings = { ...defaultSettings };
+                const simpleFields: Array<keyof SettingsState> = [
+                    'siteName',
+                    'siteDescription',
+                    'seoTitle',
+                    'seoDescription',
+                    'seoKeywords',
+                    'primaryColor',
+                    'currency',
+                    'homeHeroImageUrl',
+                ];
+
+                simpleFields.forEach((field) => {
+                    if (data[field]) (newSettings as any)[field] = data[field];
+                });
+
+                const isTrue = (val: any) => [true, 'true', 1].includes(val);
+                if (data.enableComparison !== undefined)
+                    newSettings.enableComparison = isTrue(data.enableComparison);
+                if (data.showPrices !== undefined) newSettings.showPrices = isTrue(data.showPrices);
+                if (data.enableExportShareButton !== undefined) {
+                    newSettings.enableExportShareButton = isTrue(data.enableExportShareButton);
+                }
+                if (data.maxCompareVehicles)
+                    newSettings.maxCompareVehicles = Number(data.maxCompareVehicles);
+
+                setSettings(newSettings);
+            }
+        } catch {
+            toast.error('Failed to load settings');
+        } finally {
+            setLoading(false);
+        }
+    }, [toast]);
+
+    const heroImageSrc =
+        heroPreviewBust && settings.homeHeroImageUrl
+            ? settings.homeHeroImageUrl.includes('?')
+                ? `${settings.homeHeroImageUrl}&t=${heroPreviewBust}`
+                : `${settings.homeHeroImageUrl}?t=${heroPreviewBust}`
+            : settings.homeHeroImageUrl;
 
     useEffect(() => {
         const token = localStorage.getItem('admin_token');
@@ -77,26 +139,13 @@ export default function AdminSettings() {
 
         // Load stats
         fetchStats();
-    }, [router]);
-
-    const fetchStats = async () => {
-        try {
-            const res = await fetch('/api/vehicles');
-            const data = await res.json();
-            setStats({
-                vehicles: Array.isArray(data) ? data.length : 0,
-                comparisons: parseInt(localStorage.getItem('comparison_count') || '0', 10),
-            });
-        } catch (err) {
-            console.error('Failed to fetch stats', err);
-        }
-    };
+    }, [router, fetchSettings, fetchStats]);
 
     const handleHeroImageSelected = async (file: File | null) => {
         if (!file) return;
 
         if (isDemo) {
-            toast.error('Demo admin is read-only');
+            toast.error(READ_ONLY_MSG);
             return;
         }
 
@@ -126,7 +175,7 @@ export default function AdminSettings() {
 
             if (data.imageUrl) {
                 const url = String(data.imageUrl);
-                setSettings(prev => ({ ...prev, homeHeroImageUrl: url }));
+                setSettings((prev) => ({ ...prev, homeHeroImageUrl: url }));
                 setHeroPreviewBust(Date.now());
                 try {
                     localStorage.setItem('autocompare_settings_updated_at', String(Date.now()));
@@ -143,42 +192,9 @@ export default function AdminSettings() {
         }
     };
 
-    const fetchSettings = async () => {
-        try {
-            const res = await fetch('/api/settings');
-            const data = await res.json();
-            if (res.ok && Object.keys(data).length > 0) {
-                // specific keys type safe assignment
-                const newSettings = { ...defaultSettings };
-                if (data.siteName) newSettings.siteName = data.siteName;
-                if (data.siteDescription) newSettings.siteDescription = data.siteDescription;
-                if (data.seoTitle) newSettings.seoTitle = data.seoTitle;
-                if (data.seoDescription) newSettings.seoDescription = data.seoDescription;
-                if (data.seoKeywords) newSettings.seoKeywords = data.seoKeywords;
-                if (data.primaryColor) newSettings.primaryColor = data.primaryColor;
-                if (data.currency) newSettings.currency = data.currency;
-
-                // Handle booleans/numbers that might come as strings if not parsed correctly (though API tries to parse)
-                if (data.enableComparison !== undefined) newSettings.enableComparison = [true, 'true', 1].includes(data.enableComparison);
-                if (data.showPrices !== undefined) newSettings.showPrices = [true, 'true', 1].includes(data.showPrices);
-                if (data.enableExportShareButton !== undefined) {
-                    newSettings.enableExportShareButton = [true, 'true', 1].includes(data.enableExportShareButton);
-                }
-                if (data.homeHeroImageUrl) newSettings.homeHeroImageUrl = data.homeHeroImageUrl;
-                if (data.maxCompareVehicles) newSettings.maxCompareVehicles = Number(data.maxCompareVehicles);
-
-                setSettings(newSettings);
-            }
-        } catch (err) {
-            console.error('Failed to load settings', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleSave = async () => {
         if (isDemo) {
-            toast.error('Demo admin is read-only');
+            toast.error(READ_ONLY_MSG);
             return;
         }
         setSaving(true);
@@ -186,19 +202,19 @@ export default function AdminSettings() {
             const res = await fetch('/api/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', ...getAdminAuthHeaders() },
-                body: JSON.stringify(settings)
+                body: JSON.stringify(settings),
             });
 
             if (res.ok) {
                 toast.success('Settings saved to database successfully!');
                 try {
                     localStorage.setItem('autocompare_settings_updated_at', String(Date.now()));
-                } catch { }
+                } catch {}
                 window.dispatchEvent(new Event('autocompare-settings-updated'));
             } else {
                 throw new Error('Failed to save');
             }
-        } catch (err) {
+        } catch {
             toast.error('Failed to save settings');
         }
         setSaving(false);
@@ -206,7 +222,7 @@ export default function AdminSettings() {
 
     const handleLoadSampleData = async () => {
         if (isDemo) {
-            toast.error('Demo admin is read-only');
+            toast.error(READ_ONLY_MSG);
             return;
         }
         setLoadingSample(true);
@@ -227,6 +243,7 @@ export default function AdminSettings() {
                 toast.error(data.error || 'Failed to load sample data');
             }
         } catch (err) {
+            console.error('Network error loading sample data', err);
             toast.error('Network error loading sample data');
         }
 
@@ -235,7 +252,7 @@ export default function AdminSettings() {
 
     const handleClearData = async () => {
         if (isDemo) {
-            toast.error('Demo admin is read-only');
+            toast.error(READ_ONLY_MSG);
             return;
         }
         if (!confirm('Are you sure you want to delete ALL vehicles? This cannot be undone.')) {
@@ -258,6 +275,7 @@ export default function AdminSettings() {
                 toast.error(data.error || 'Failed to clear data');
             }
         } catch (err) {
+            console.error('Network error clearing data', err);
             toast.error('Network error');
         }
     };
@@ -286,7 +304,9 @@ export default function AdminSettings() {
                         <h1 className="text-3xl font-black italic uppercase tracking-tighter">
                             Settings
                         </h1>
-                        <p className="text-gray-500 font-medium">Manage your AutoCompare configuration</p>
+                        <p className="text-gray-500 font-medium">
+                            Manage your AutoCompare configuration
+                        </p>
                         {isDemo && (
                             <p className="text-xs font-bold uppercase text-orange-600 mt-1">
                                 Demo admin (read-only)
@@ -309,7 +329,9 @@ export default function AdminSettings() {
                         <div className="space-y-4">
                             <div className="flex justify-between items-center p-3 bg-gray-50 border-2 border-black">
                                 <span className="font-bold">Total Vehicles</span>
-                                <span className="text-2xl font-black text-blue-600">{stats.vehicles}</span>
+                                <span className="text-2xl font-black text-blue-600">
+                                    {stats.vehicles}
+                                </span>
                             </div>
 
                             <button
@@ -347,21 +369,29 @@ export default function AdminSettings() {
 
                         <div className="space-y-4">
                             <div>
-                                <label htmlFor="siteName" className="block text-sm font-bold uppercase mb-1">
+                                <label
+                                    htmlFor="siteName"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
                                     Site Name
                                 </label>
                                 <input
                                     id="siteName"
                                     type="text"
                                     value={settings.siteName}
-                                    onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
+                                    onChange={(e) =>
+                                        setSettings({ ...settings, siteName: e.target.value })
+                                    }
                                     disabled={isDemo}
                                     className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="primaryColor" className="block text-sm font-bold uppercase mb-1">
+                                <label
+                                    htmlFor="primaryColor"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
                                     Primary Color
                                 </label>
                                 <div className="flex gap-2">
@@ -369,14 +399,24 @@ export default function AdminSettings() {
                                         id="primaryColor"
                                         type="color"
                                         value={settings.primaryColor}
-                                        onChange={(e) => setSettings({ ...settings, primaryColor: e.target.value })}
+                                        onChange={(e) =>
+                                            setSettings({
+                                                ...settings,
+                                                primaryColor: e.target.value,
+                                            })
+                                        }
                                         disabled={isDemo}
                                         className="w-12 h-10 border-2 border-black cursor-pointer"
                                     />
                                     <input
                                         type="text"
                                         value={settings.primaryColor}
-                                        onChange={(e) => setSettings({ ...settings, primaryColor: e.target.value })}
+                                        onChange={(e) =>
+                                            setSettings({
+                                                ...settings,
+                                                primaryColor: e.target.value,
+                                            })
+                                        }
                                         disabled={isDemo}
                                         className="flex-1 p-2 border-2 border-black font-mono"
                                     />
@@ -384,13 +424,18 @@ export default function AdminSettings() {
                             </div>
 
                             <div>
-                                <label htmlFor="currency" className="block text-sm font-bold uppercase mb-1">
+                                <label
+                                    htmlFor="currency"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
                                     Currency
                                 </label>
                                 <select
                                     id="currency"
                                     value={settings.currency}
-                                    onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
+                                    onChange={(e) =>
+                                        setSettings({ ...settings, currency: e.target.value })
+                                    }
                                     disabled={isDemo}
                                     className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none bg-white"
                                 >
@@ -402,27 +447,37 @@ export default function AdminSettings() {
                             </div>
 
                             <div>
-                                <label htmlFor="seoTitle" className="block text-sm font-bold uppercase mb-1">
+                                <label
+                                    htmlFor="seoTitle"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
                                     SEO Title
                                 </label>
                                 <input
                                     id="seoTitle"
                                     type="text"
                                     value={settings.seoTitle}
-                                    onChange={(e) => setSettings({ ...settings, seoTitle: e.target.value })}
+                                    onChange={(e) =>
+                                        setSettings({ ...settings, seoTitle: e.target.value })
+                                    }
                                     disabled={isDemo}
                                     className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="seoDescription" className="block text-sm font-bold uppercase mb-1">
+                                <label
+                                    htmlFor="seoDescription"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
                                     SEO Description
                                 </label>
                                 <textarea
                                     id="seoDescription"
                                     value={settings.seoDescription}
-                                    onChange={(e) => setSettings({ ...settings, seoDescription: e.target.value })}
+                                    onChange={(e) =>
+                                        setSettings({ ...settings, seoDescription: e.target.value })
+                                    }
                                     disabled={isDemo}
                                     rows={3}
                                     className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
@@ -430,21 +485,29 @@ export default function AdminSettings() {
                             </div>
 
                             <div>
-                                <label htmlFor="seoKeywords" className="block text-sm font-bold uppercase mb-1">
+                                <label
+                                    htmlFor="seoKeywords"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
                                     SEO Keywords (comma-separated)
                                 </label>
                                 <input
                                     id="seoKeywords"
                                     type="text"
                                     value={settings.seoKeywords}
-                                    onChange={(e) => setSettings({ ...settings, seoKeywords: e.target.value })}
+                                    onChange={(e) =>
+                                        setSettings({ ...settings, seoKeywords: e.target.value })
+                                    }
                                     disabled={isDemo}
                                     className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="homeHeroImageFile" className="block text-sm font-bold uppercase mb-1">
+                                <label
+                                    htmlFor="homeHeroImageFile"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
                                     Home Hero Image (PNG)
                                 </label>
                                 <div className="space-y-3">
@@ -489,13 +552,22 @@ export default function AdminSettings() {
 
                                         {settings.homeHeroImageUrl ? (
                                             <div className="space-y-1">
-                                                <p className="font-bold text-sm">Drop a new image here or click to change</p>
-                                                <p className="text-xs text-gray-500 break-all">Current URL: {settings.homeHeroImageUrl}</p>
+                                                <p className="font-bold text-sm">
+                                                    Drop a new image here or click to change
+                                                </p>
+                                                <p className="text-xs text-gray-500 break-all">
+                                                    Current URL: {settings.homeHeroImageUrl}
+                                                </p>
                                             </div>
                                         ) : (
                                             <>
-                                                <p className="font-bold text-sm">Drop hero PNG here or click to upload</p>
-                                                <p className="text-xs text-gray-500">Recommended transparent PNG with wide aspect ratio.</p>
+                                                <p className="font-bold text-sm">
+                                                    Drop hero PNG here or click to upload
+                                                </p>
+                                                <p className="text-xs text-gray-500">
+                                                    Recommended transparent PNG with wide aspect
+                                                    ratio.
+                                                </p>
                                             </>
                                         )}
 
@@ -511,13 +583,7 @@ export default function AdminSettings() {
                                         <div className="flex items-center gap-3">
                                             <div className="relative w-32 h-20 border-2 border-black bg-gray-100 overflow-hidden">
                                                 <Image
-                                                    src={
-                                                        heroPreviewBust
-                                                            ? (settings.homeHeroImageUrl.includes('?')
-                                                                ? `${settings.homeHeroImageUrl}&t=${heroPreviewBust}`
-                                                                : `${settings.homeHeroImageUrl}?t=${heroPreviewBust}`)
-                                                            : settings.homeHeroImageUrl
-                                                    }
+                                                    src={heroImageSrc}
                                                     alt="Home hero preview"
                                                     fill
                                                     sizes="128px"
@@ -526,7 +592,8 @@ export default function AdminSettings() {
                                                 />
                                             </div>
                                             <p className="text-xs text-gray-500">
-                                                Preview of the current hero image as it will appear on the home page.
+                                                Preview of the current hero image as it will appear
+                                                on the home page.
                                             </p>
                                         </div>
                                     )}
@@ -546,7 +613,10 @@ export default function AdminSettings() {
 
                         <div className="space-y-4">
                             <div>
-                                <label htmlFor="maxCompare" className="block text-sm font-bold uppercase mb-1">
+                                <label
+                                    htmlFor="maxCompare"
+                                    className="block text-sm font-bold uppercase mb-1"
+                                >
                                     Max Vehicles to Compare
                                 </label>
                                 <input
@@ -556,7 +626,10 @@ export default function AdminSettings() {
                                     max="10"
                                     value={settings.maxCompareVehicles}
                                     onChange={(e) =>
-                                        setSettings({ ...settings, maxCompareVehicles: parseInt(e.target.value, 10) })
+                                        setSettings({
+                                            ...settings,
+                                            maxCompareVehicles: parseInt(e.target.value, 10),
+                                        })
                                     }
                                     disabled={isDemo}
                                     className="w-full p-2 border-2 border-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
@@ -568,7 +641,9 @@ export default function AdminSettings() {
                                     id="showPrices"
                                     type="checkbox"
                                     checked={settings.showPrices}
-                                    onChange={(e) => setSettings({ ...settings, showPrices: e.target.checked })}
+                                    onChange={(e) =>
+                                        setSettings({ ...settings, showPrices: e.target.checked })
+                                    }
                                     disabled={isDemo}
                                     className="w-5 h-5 accent-yellow-500"
                                 />
@@ -582,7 +657,12 @@ export default function AdminSettings() {
                                     id="enableExportShareButton"
                                     type="checkbox"
                                     checked={settings.enableExportShareButton}
-                                    onChange={(e) => setSettings({ ...settings, enableExportShareButton: e.target.checked })}
+                                    onChange={(e) =>
+                                        setSettings({
+                                            ...settings,
+                                            enableExportShareButton: e.target.checked,
+                                        })
+                                    }
                                     disabled={isDemo}
                                     className="w-5 h-5 accent-yellow-500"
                                 />
@@ -596,7 +676,12 @@ export default function AdminSettings() {
                                     id="enableComparison"
                                     type="checkbox"
                                     checked={settings.enableComparison}
-                                    onChange={(e) => setSettings({ ...settings, enableComparison: e.target.checked })}
+                                    onChange={(e) =>
+                                        setSettings({
+                                            ...settings,
+                                            enableComparison: e.target.checked,
+                                        })
+                                    }
                                     disabled={isDemo}
                                     className="w-5 h-5 accent-yellow-500"
                                 />
@@ -652,7 +737,11 @@ export default function AdminSettings() {
                         disabled={saving || isDemo}
                         className="w-full md:w-auto px-8 py-3 bg-yellow-400 text-black font-black uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                     >
-                        {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                        {saving ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                            <Save className="w-5 h-5" />
+                        )}
                         Save Settings
                     </button>
                 </div>

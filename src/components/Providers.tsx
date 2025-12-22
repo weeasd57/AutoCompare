@@ -15,9 +15,7 @@ export function Providers({ children }: ProvidersProps) {
         <ThemeProvider>
             <SettingsProvider>
                 <ToastProvider>
-                    <VehicleProvider>
-                        {children}
-                    </VehicleProvider>
+                    <VehicleProvider>{children}</VehicleProvider>
                 </ToastProvider>
             </SettingsProvider>
         </ThemeProvider>

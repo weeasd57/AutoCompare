@@ -35,7 +35,7 @@ export function FavoritesPanel({ className }: FavoritesPanelProps) {
     };
 
     const isInComparison = (vehicleId: string) => {
-        return compareVehicles.some(v => v.id === vehicleId);
+        return compareVehicles.some((v) => v.id === vehicleId);
     };
 
     if (!mounted) {
@@ -67,7 +67,9 @@ export function FavoritesPanel({ className }: FavoritesPanelProps) {
                 aria-label="Favorites"
                 title="View Favorites"
             >
-                <Heart className={clsx('w-5 h-5', favorites.length > 0 && 'fill-current text-red-500')} />
+                <Heart
+                    className={clsx('w-5 h-5', favorites.length > 0 && 'fill-current text-red-500')}
+                />
                 {favorites.length > 0 && (
                     <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs font-black rounded-full flex items-center justify-center border border-black">
                         {favorites.length}
@@ -84,7 +86,9 @@ export function FavoritesPanel({ className }: FavoritesPanelProps) {
                         tabIndex={0}
                         className="fixed inset-0 z-40"
                         onClick={() => setIsOpen(false)}
-                        onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false); }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Escape') setIsOpen(false);
+                        }}
                         aria-label="Close panel"
                     />
 
@@ -114,7 +118,9 @@ export function FavoritesPanel({ className }: FavoritesPanelProps) {
                                 <div className="p-8 text-center text-gray-500">
                                     <Heart className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                                     <p className="font-bold">No favorites yet</p>
-                                    <p className="text-sm mt-1">Click the heart icon on vehicles to save them here</p>
+                                    <p className="text-sm mt-1">
+                                        Click the heart icon on vehicles to save them here
+                                    </p>
                                 </div>
                             ) : (
                                 <ul>
@@ -141,7 +147,11 @@ export function FavoritesPanel({ className }: FavoritesPanelProps) {
                                                             ? 'bg-green-100 text-green-700 cursor-not-allowed'
                                                             : 'bg-blue-500 text-white hover:bg-blue-600'
                                                     )}
-                                                    title={isInComparison(vehicle.id) ? 'Already in comparison' : 'Add to comparison'}
+                                                    title={
+                                                        isInComparison(vehicle.id)
+                                                            ? 'Already in comparison'
+                                                            : 'Add to comparison'
+                                                    }
                                                 >
                                                     <Scale className="w-3 h-3" />
                                                 </button>

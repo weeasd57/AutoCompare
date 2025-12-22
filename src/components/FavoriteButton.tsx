@@ -87,24 +87,15 @@ export function FavoriteButton({
                 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]',
                 'hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]',
                 'active:shadow-none active:translate-x-[2px] active:translate-y-[2px]',
-                isLiked
-                    ? 'bg-red-500 text-white'
-                    : 'bg-white text-gray-600 hover:text-red-500',
+                isLiked ? 'bg-red-500 text-white' : 'bg-white text-gray-600 hover:text-red-500',
                 className
             )}
             aria-label={isLiked ? 'Remove from favorites' : 'Add to favorites'}
             title={isLiked ? 'Remove from favorites' : 'Add to favorites'}
         >
-            <Heart
-                className={clsx(
-                    sizeClasses[size],
-                    isLiked && 'fill-current'
-                )}
-            />
+            <Heart className={clsx(sizeClasses[size], isLiked && 'fill-current')} />
             {showLabel && (
-                <span className="ml-2 font-bold text-sm">
-                    {isLiked ? 'Saved' : 'Save'}
-                </span>
+                <span className="ml-2 font-bold text-sm">{isLiked ? 'Saved' : 'Save'}</span>
             )}
         </button>
     );
